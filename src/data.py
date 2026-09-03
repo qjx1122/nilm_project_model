@@ -70,6 +70,40 @@ def build_splits(aggregate, target, window, train_ratio=0.7, val_ratio=0.15,
     )
 
 
+def build_crosshouse_split(aggregate_tr, target_tr, aggregate_te, target_te, window,
+                           train_ratio=0.7, val_ratio=0.15,
+                           max_train=None, max_val=None, max_test=None):
+    """Cross-house split: train/val centers are time-split inside the SOURCE household;
+    test centers come from the WHOLE target household series (domain-shift eval).
+    Normalization is fitted on the source train segment only (same KPI as build_splits).
+    """
+    n = len(aggregate_tr)
+    a = int(n * train_ratio)
+    b = int(n * (train_ratio + val_ratio))
+    train_centers = np.arange(window // 2, a - window // 2, dtype=np.int64)
+    val_centers = np.arange(a + window // 2, b - window // 2, dtype=np.int64)
+    if max_train and len(train_centers) > max_train:
+        train_centers = np.linspace(train_centers[0], train_centers[-1], max_train).astype(np.int64)
+    if max_val and len(val_centers) > max_val:
+        val_centers = np.linspace(val_centers[0], val_centers[-1], max_val).astype(np.int64)
+
+    train_x = aggregate_tr[:a]
+    train_y = target_tr[:a]
+    x_mean, x_std = float(train_x.mean()), float(train_x.std() + 1e-6)
+    y_mean, y_std = float(train_y.mean()), float(train_y.std() + 1e-6)
+
+    m = len(aggregate_te)
+    test_centers = np.arange(window // 2, m - window // 2, dtype=np.int64)
+    if max_test and len(test_centers) > max_test:
+        test_centers = np.linspace(test_centers[0], test_centers[-1], max_test).astype(np.int64)
+
+    return (
+        WindowDataset(aggregate_tr, target_tr, window, train_centers, x_mean, x_std, y_mean, y_std),
+        WindowDataset(aggregate_tr, target_tr, window, val_centers, x_mean, x_std, y_mean, y_std),
+        WindowDataset(aggregate_te, target_te, window, test_centers, x_mean, x_std, y_mean, y_std),
+    )
+
+
 def load_nilmbench_labels(labels_path, class_name="kettle"):
     """Load x_agg/y_power from NILMbench processed UK-DALE labels_and_index.npz.
     x_agg is an 11-point aggregate context. This loader is intentionally separate

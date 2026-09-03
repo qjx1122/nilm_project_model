@@ -55,9 +55,12 @@ for i, c in enumerate(candidates, 1):
     run_dir = out / f"trial_{i:03d}"
     print(f"\n===== TRIAL {i}/{len(candidates)} =====")
     result = train_experiment(x, y, trial, run_dir)
+    # Rank by validation only: read the epoch history written by train_experiment.
+    hist = json.loads((run_dir / "history.json").read_text(encoding="utf-8"))
+    best_val_mae = min(row["val_mae"] for row in hist)
     row = {
         "trial": i,
-        "val_objective": "validation MAE is stored in history",
+        "val_mae_best": best_val_mae,
         "test_mae": result["test"]["mae"],
         "test_rmse": result["test"]["rmse"],
         "test_r2": result["test"]["r2"],
@@ -67,13 +70,12 @@ for i, c in enumerate(candidates, 1):
     }
     rows.append(row)
 
-# This simple demo ranks by test MAE only for convenience. For real tuning,
-# test must be withheld; replace ranking with best validation MAE from history.
-rows.sort(key=lambda r: r["test_mae"])
+# Selection uses validation MAE only; test numbers are reported after ranking, never used to pick.
+rows.sort(key=lambda r: r["val_mae_best"])
 with (out / "tuning_summary.csv").open("w", newline="", encoding="utf-8-sig") as f:
     w = csv.DictWriter(f, fieldnames=rows[0].keys())
     w.writeheader(); w.writerows(rows)
 (out / "best_trial.json").write_text(json.dumps(rows[0], indent=2), encoding="utf-8")
-print("\nNOTE: The demo tuner ranks by test MAE because this compact script is intended as a teaching scaffold.")
-print("For publication-grade experiments, rank ONLY by validation MAE, then lock the best config and evaluate Test once.")
+print("\nNOTE: Trials are ranked ONLY by validation MAE (val_mae_best). Test metrics are reported for the record, not for selection.")
+print("Lock the best config, then evaluate Test once.", )
 print("Best trial:", rows[0])

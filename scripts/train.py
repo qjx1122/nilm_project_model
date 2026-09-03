@@ -8,6 +8,8 @@ from src.experiment import train_experiment
 p = argparse.ArgumentParser()
 p.add_argument("--config", required=True)
 p.add_argument("--data-path", default="")
+p.add_argument("--test-data", default="",
+               help="可选：另一住户的 NPZ（aggregate/target）。提供时 train/val 来自 --data-path，Test 用整套目标住户序列（跨家庭评估）")
 p.add_argument("--out", default="reports/baseline")
 p.add_argument("--synthetic", action="store_true")
 args = p.parse_args()
@@ -20,5 +22,11 @@ else:
     # Expected NPZ format: aggregate, target.
     x, y = load_simple_npz(args.data_path)
 
-result = train_experiment(x, y, cfg, args.out)
+test_series = None
+if args.test_data:
+    tx, ty = load_simple_npz(args.test_data)
+    test_series = (tx, ty)
+    cfg.setdefault("data", {})["cross_test_path"] = str(args.test_data)
+
+result = train_experiment(x, y, cfg, args.out, test_series=test_series)
 print(result)

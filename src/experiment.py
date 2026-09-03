@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from .model import NILMTransformer
-from .data import build_splits
+from .data import build_splits, build_crosshouse_split
 from .metrics import regression_metrics
 from .trainer import fit, run_epoch
 
@@ -23,7 +23,7 @@ def select_device(name="auto"):
     return torch.device(name)
 
 
-def train_experiment(aggregate, target, cfg, out_dir):
+def train_experiment(aggregate, target, cfg, out_dir, test_series=None):
     seed_everything(cfg.get("seed", 42))
     device = select_device(cfg.get("device", "auto"))
     out_dir = Path(out_dir)
@@ -34,12 +34,21 @@ def train_experiment(aggregate, target, cfg, out_dir):
     tcfg = cfg["training"]
     window = int(dcfg["window_size"])
 
-    train_ds, val_ds, test_ds = build_splits(
-        aggregate, target, window,
-        dcfg["train_ratio"], dcfg["val_ratio"],
-        dcfg.get("max_samples_train"), dcfg.get("max_samples_val"),
-        dcfg.get("max_samples_test")
-    )
+    if test_series is not None:
+        # Cross-house evaluation: train/val on source household, test on target household.
+        train_ds, val_ds, test_ds = build_crosshouse_split(
+            aggregate, target, test_series[0], test_series[1], window,
+            dcfg["train_ratio"], dcfg["val_ratio"],
+            dcfg.get("max_samples_train"), dcfg.get("max_samples_val"),
+            dcfg.get("max_samples_test")
+        )
+    else:
+        train_ds, val_ds, test_ds = build_splits(
+            aggregate, target, window,
+            dcfg["train_ratio"], dcfg["val_ratio"],
+            dcfg.get("max_samples_train"), dcfg.get("max_samples_val"),
+            dcfg.get("max_samples_test")
+        )
     train_loader = DataLoader(train_ds, batch_size=tcfg["batch_size"], shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=tcfg["batch_size"], shuffle=False)
     test_loader = DataLoader(test_ds, batch_size=tcfg["batch_size"], shuffle=False)

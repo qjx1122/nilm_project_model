@@ -1,0 +1,30 @@
+# 调参臂：lr=5e-4 对照组（同 15k/3k 预算，与 baseline 30k 预算不可直接比数值）
+seed: 42
+device: auto
+data:
+  path: data/ukdale_house1_fridge.npz
+  appliance: fridge
+  window_size: 128
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  max_samples_train: 15000
+  max_samples_val: 3000
+  max_samples_test: 6000
+model:
+  input_dim: 1
+  d_model: 64
+  nhead: 4
+  num_layers: 2
+  dim_feedforward: 128
+  dropout: 0.1
+training:
+  batch_size: 128
+  epochs: 40
+  lr: 0.0005
+  weight_decay: 0.0001
+  patience: 5
+  grad_clip: 1.0
+  loss: mse
+metrics:
+  on_threshold_watts: 30.0
