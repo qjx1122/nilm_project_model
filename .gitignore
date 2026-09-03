@@ -1,0 +1,6 @@
+# 本地数据与缓存，不入 git
+data/
+checkpoints/
+logs/
+__pycache__/
+*.pyc

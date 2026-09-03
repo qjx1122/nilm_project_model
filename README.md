@@ -64,6 +64,21 @@ conda activate transformer_nilm
 python scripts\inspect_h5.py --path D:\datasets\ukdale.h5
 ```
 
+### 受限网络环境（沙箱/离线）下的替代路径
+
+若无法访问 jack-kelly.com / UKERC EDC / HuggingFace（例如在 egress 白名单沙箱中），可使用 GitHub 上
+第三方的 UK-DALE 低频子集切片（6 秒网格、aggregate+电器功率列，CSV 格式），用本仓库脚本转成 NPZ：
+
+```bash
+python scripts/prepare_ukdale_subset.py \
+  --csv <dir>/UKDALE_HF_train.csv <dir>/UKDALE_HF_validation.csv <dir>/UKDALE_HF_test.csv \
+  --appliance fridge \
+  --out data/ukdale_house1_fridge.npz \
+  --report data/ukdale_house1_fridge.report.json
+```
+
+注意：子集≠全量官方数据，报告中必须注明来源与时间范围，指标不得冒充全量结果。
+
 ## 3. Windows + Conda
 
 ```powershell
@@ -73,6 +88,14 @@ pip install -r requirements.txt
 ```
 
 GPU 用户请先按自己的 CUDA 版本安装对应 PyTorch，再安装其余依赖。
+
+Linux/沙箱环境无 conda 时等价操作：
+
+```bash
+python3 -m venv /home/user/venv
+/home/user/venv/bin/pip install -r requirements.txt
+# download.pytorch.org 不通时，PyTorch 走 PyPI 默认源（CPU wheel 较大但可用）
+```
 
 ## 4. 项目结构
 
@@ -96,7 +119,8 @@ transformer_nilm_project/
 │   ├── train.py
 │   ├── evaluate.py
 │   ├── tune.py
-│   └── run_smoke.py
+│   ├── run_smoke.py
+│   └── prepare_ukdale_subset.py
 ├── tests/
 ├── requirements.txt
 ├── run_baseline.ps1
@@ -140,6 +164,13 @@ epochs: 30
 ```powershell
 python scripts\train.py --config configs\baseline.yaml --data-path D:\datasets\ukdale.h5
 python scripts\evaluate.py --run-dir reports\baseline
+```
+
+已在本仓库验证过的真实子集命令（Linux/CPU，数据来自 `prepare_ukdale_subset.py`）：
+
+```bash
+python scripts/train.py --config configs/ukdale_fridge.yaml --data-path data/ukdale_house1_fridge.npz --out reports/ukdale_fridge
+python scripts/evaluate.py --run-dir reports/ukdale_fridge
 ```
 
 ## 7. 调优
