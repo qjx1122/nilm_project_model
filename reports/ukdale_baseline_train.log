@@ -1,0 +1,55 @@
+=== FRIDGE Thu Sep  3 12:13:02 UTC 2026 ===
+/home/user/nilm_project_model/src/model.py:48: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
+Epoch 001 | train MAE=36.44 | val MAE=32.72 | train R2=0.2082 | val R2=0.2452
+Epoch 002 | train MAE=31.19 | val MAE=33.75 | train R2=0.3185 | val R2=0.2056
+Epoch 003 | train MAE=30.27 | val MAE=33.02 | train R2=0.3555 | val R2=0.2944
+Epoch 004 | train MAE=29.41 | val MAE=31.82 | train R2=0.3731 | val R2=0.3040
+Epoch 005 | train MAE=28.96 | val MAE=30.60 | train R2=0.3882 | val R2=0.3161
+Epoch 006 | train MAE=28.72 | val MAE=31.27 | train R2=0.3907 | val R2=0.2767
+Epoch 007 | train MAE=28.37 | val MAE=30.96 | train R2=0.4001 | val R2=0.2790
+Epoch 008 | train MAE=28.48 | val MAE=29.86 | train R2=0.3997 | val R2=0.2918
+Epoch 009 | train MAE=27.91 | val MAE=30.01 | train R2=0.4099 | val R2=0.2792
+Epoch 010 | train MAE=28.10 | val MAE=29.78 | train R2=0.4092 | val R2=0.3195
+Epoch 011 | train MAE=27.66 | val MAE=29.79 | train R2=0.4188 | val R2=0.2636
+Epoch 012 | train MAE=27.55 | val MAE=29.32 | train R2=0.4180 | val R2=0.2999
+Epoch 013 | train MAE=27.31 | val MAE=30.39 | train R2=0.4261 | val R2=0.2893
+Epoch 014 | train MAE=27.25 | val MAE=29.95 | train R2=0.4322 | val R2=0.3423
+Epoch 015 | train MAE=27.23 | val MAE=29.15 | train R2=0.4288 | val R2=0.3171
+Epoch 016 | train MAE=26.89 | val MAE=29.83 | train R2=0.4349 | val R2=0.3212
+Epoch 017 | train MAE=26.89 | val MAE=30.06 | train R2=0.4366 | val R2=0.3325
+Epoch 018 | train MAE=26.69 | val MAE=30.99 | train R2=0.4440 | val R2=0.3218
+Epoch 019 | train MAE=26.63 | val MAE=28.39 | train R2=0.4477 | val R2=0.3203
+Epoch 020 | train MAE=26.25 | val MAE=29.07 | train R2=0.4549 | val R2=0.3363
+Epoch 021 | train MAE=26.13 | val MAE=28.77 | train R2=0.4590 | val R2=0.3107
+Epoch 022 | train MAE=25.85 | val MAE=29.71 | train R2=0.4629 | val R2=0.3354
+Epoch 023 | train MAE=25.74 | val MAE=28.29 | train R2=0.4661 | val R2=0.3201
+Epoch 024 | train MAE=25.62 | val MAE=28.59 | train R2=0.4710 | val R2=0.3551
+Epoch 025 | train MAE=25.53 | val MAE=28.63 | train R2=0.4755 | val R2=0.3315
+Epoch 026 | train MAE=25.13 | val MAE=28.16 | train R2=0.4779 | val R2=0.3552
+Epoch 027 | train MAE=25.32 | val MAE=28.29 | train R2=0.4800 | val R2=0.3182
+Epoch 028 | train MAE=25.17 | val MAE=27.84 | train R2=0.4820 | val R2=0.3152
+Epoch 029 | train MAE=24.95 | val MAE=28.10 | train R2=0.4885 | val R2=0.3391
+Epoch 030 | train MAE=24.78 | val MAE=27.83 | train R2=0.4930 | val R2=0.3350
+{'best_epoch': 30, 'device': 'cpu', 'runtime_sec': 5241.874759197235, 'test': {'mae': 30.634063896814983, 'rmse': 50.39128160872295, 'r2': 0.2966875528290749, 'sae': 0.15575621458948177, 'energy_error': 0.15575621458948177, 'precision': 0.6338967971530249, 'recall': 0.9602425876010782, 'f1': 0.7636655948553056}, 'config': {'seed': 42, 'device': 'auto', 'data': {'path': 'data/ukdale_house1_fridge.npz', 'appliance': 'fridge', 'window_size': 128, 'train_ratio': 0.7, 'val_ratio': 0.15, 'test_ratio': 0.15, 'max_samples_train': 30000, 'max_samples_val': 6000, 'max_samples_test': 6000}, 'model': {'input_dim': 1, 'd_model': 64, 'nhead': 4, 'num_layers': 2, 'dim_feedforward': 128, 'dropout': 0.1}, 'training': {'batch_size': 128, 'epochs': 30, 'lr': 0.0005, 'weight_decay': 0.0001, 'patience': 7, 'grad_clip': 1.0, 'loss': 'mse'}, 'metrics': {'on_threshold_watts': 30.0}}, 'n_train': 30000, 'n_val': 6000, 'n_test': 6000}
+=== WASHING Thu Sep  3 13:40:30 UTC 2026 ===
+/home/user/nilm_project_model/src/model.py:48: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
+Epoch 001 | train MAE=40.68 | val MAE=33.14 | train R2=0.4643 | val R2=0.5878
+Epoch 002 | train MAE=26.70 | val MAE=19.59 | train R2=0.7221 | val R2=0.7634
+Epoch 003 | train MAE=21.43 | val MAE=24.56 | train R2=0.7773 | val R2=0.7544
+Epoch 004 | train MAE=18.80 | val MAE=17.90 | train R2=0.7957 | val R2=0.7132
+Epoch 005 | train MAE=17.92 | val MAE=19.87 | train R2=0.8021 | val R2=0.7365
+Epoch 006 | train MAE=18.05 | val MAE=19.64 | train R2=0.7992 | val R2=0.7436
+Epoch 007 | train MAE=16.69 | val MAE=20.46 | train R2=0.8146 | val R2=0.7516
+Epoch 008 | train MAE=15.83 | val MAE=15.86 | train R2=0.8153 | val R2=0.7574
+Epoch 009 | train MAE=15.57 | val MAE=13.45 | train R2=0.8220 | val R2=0.7740
+Epoch 010 | train MAE=14.48 | val MAE=16.66 | train R2=0.8365 | val R2=0.7291
+Epoch 011 | train MAE=14.71 | val MAE=14.20 | train R2=0.8238 | val R2=0.8132
+Epoch 012 | train MAE=14.14 | val MAE=14.20 | train R2=0.8322 | val R2=0.7461
+Epoch 013 | train MAE=14.38 | val MAE=13.95 | train R2=0.8132 | val R2=0.8017
+Epoch 014 | train MAE=14.29 | val MAE=15.78 | train R2=0.8394 | val R2=0.7170
+Epoch 015 | train MAE=13.89 | val MAE=13.80 | train R2=0.8332 | val R2=0.7463
+Epoch 016 | train MAE=13.34 | val MAE=14.89 | train R2=0.8514 | val R2=0.7357
+{'best_epoch': 9, 'device': 'cpu', 'runtime_sec': 2852.723352909088, 'test': {'mae': 14.587731606165567, 'rmse': 92.51078695490257, 'r2': 0.8634847354877947, 'sae': 0.02286407085780237, 'energy_error': -0.02286407085780237, 'precision': 0.9090909090909091, 'recall': 0.9174311926605505, 'f1': 0.9132420091324202}, 'config': {'seed': 42, 'device': 'auto', 'data': {'path': 'data/ukdale_house1_washing_machine.npz', 'appliance': 'washing_machine', 'window_size': 128, 'train_ratio': 0.7, 'val_ratio': 0.15, 'test_ratio': 0.15, 'max_samples_train': 30000, 'max_samples_val': 6000, 'max_samples_test': 6000}, 'model': {'input_dim': 1, 'd_model': 64, 'nhead': 4, 'num_layers': 2, 'dim_feedforward': 128, 'dropout': 0.1}, 'training': {'batch_size': 128, 'epochs': 30, 'lr': 0.0005, 'weight_decay': 0.0001, 'patience': 7, 'grad_clip': 1.0, 'loss': 'mse'}, 'metrics': {'on_threshold_watts': 500.0}}, 'n_train': 30000, 'n_val': 6000, 'n_test': 6000}
+=== DONE rc=0 ===
