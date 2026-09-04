@@ -6,3 +6,4 @@ matplotlib>=3.7
 pyyaml>=6.0
 tqdm>=4.65
 h5py>=3.9
+tables>=3.9

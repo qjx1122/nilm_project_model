@@ -1,9 +1,9 @@
 $ErrorActionPreference = "Stop"
-conda activate transformer_nilm
+conda activate test_gpu
 
 if (-not $env:UKDALE_PREPARED_NPZ) {
     Write-Host "请先设置 UKDALE_PREPARED_NPZ，例如："
-    Write-Host '$env:UKDALE_PREPARED_NPZ="D:\datasets\ukdale_prepared.npz"'
+    Write-Host '$env:UKDALE_PREPARED_NPZ="D:\Work\testPython\datasets\ukdale_prepared.npz"'
     exit 1
 }
 
