@@ -44,3 +44,29 @@
   - 新建：`STATUS.md`、`session/NILM_AC_session_complete.md`、`REPORT_TEST.md`
   - 产物：`reports/smoke/best.pt`、`reports/smoke/history.json`、`reports/smoke/result.json`
   - 入口：`scripts/run_smoke.py`、`configs/baseline.yaml`、`src/data.py`、`src/experiment.py`
+
+## [2026-09-04] 会话纪要（续：UK-DALE 数据下载）
+- 目标：下载 UK-DALE 数据集，为真实 Kettle Seq2Point 实验准备 `ukdale.h5`
+- 完成项：
+  - 调研下载源：UKERC EDC 官方（需注册）/ HF `Pybunny/nilmbench-ukdale` / CSV 版
+  - 探测 HF 可达性：huggingface.co 系统层超时（GFW）；hf-mirror.com 返回 429 限流；conda run 不传递 `HF_ENDPOINT` 给 Python 子进程
+  - 与用户确认路径：用户选**手动下载** + 存 `D:\Work\testPython\datasets`（sandbox 可写区内）
+  - 创建 `D:\Work\testPython\datasets` 目录，提供下载指引（hf-mirror / UKERC / Jack Kelly 个人页）
+  - 用户完成下载：`ukdale.h5`（3.19GB）+ `ukdale.h5.tgz`（2.84GB 压缩备份）
+  - 验证：`python scripts/inspect_h5.py --path D:\Work\testPython\datasets\ukdale.h5` 确认合法 NILMTK HDF5，root keys = building1-5
+  - 数据流分析：读 `src/data.py`、`scripts/train.py`、`run_real.ps1`，确认项目期望 `ukdale_prepared.npz`（aggregate+target 数组），**项目缺 `ukdale.h5 → npz` 预处理脚本**
+- 关键决策：
+  - 数据存 `D:\Work\testPython\datasets`（用户选定，绕开 sandbox 写入限制；README 默认 `D:\datasets` 需在实验时调整）
+  - 不改 README.md：路径差异属本机偏好，待预处理脚本落地后统一在 README 补说明
+  - 不删 `ukdale.h5.tgz`：留作备份
+  - 真实实验前置阻塞 = 缺预处理脚本，登记到下一步 TODO
+- 未决问题：
+  - 预处理脚本用 nilmtk（未装，需 `pip install nilmtk`）还是 h5py 直接读（需探 building1 内部 key 结构）
+  - 真实训练是否继续用 `test_gpu` env（待用户确认）
+  - README 默认路径 `D:\datasets` 与实际 `D:\Work\testPython\datasets` 不符，是否更新 README
+- 相关文件/分支：
+  - 分支：`nilm-project-model-ritual-4zSHFv`
+  - 更新：`STATUS.md`（当前目标/已完成/下一步/决策记录）
+  - 数据：`D:\Work\testPython\datasets\ukdale.h5`（3.19GB）、`ukdale.h5.tgz`（2.84GB）
+  - 验证脚本：`scripts/inspect_h5.py`
+  - 数据流参考：`src/data.py`、`scripts/train.py`、`run_real.ps1`、`configs/baseline.yaml`
