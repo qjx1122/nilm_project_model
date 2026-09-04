@@ -2,9 +2,8 @@
 
 ## 当前目标
 
-- **本会话任务（已完成）**：跑完整 baseline——`configs/baseline.yaml` + `ukdale_prepared.npz`，30 epoch（patience=7，ep15 早停，best\_epoch=8），cuda 59.1s。**首个真实科学结果**：Test F1=0.792 / MAE=13.09 / R²=0.59
-
-- **下一会话待定**：据 README §8 用 val 指标调参 / 多种子稳定性验证 / 跨建筑验证（择一）
+- **本会话任务（已完成）**：分析 baseline val/test F1 差距（0.929→0.792，主因 Recall 0.897→0.678）。写 `scripts/analyze_gap.py` 诊断，结论：主因 A（test 段 ON 密度 0.88% > val 0.60%，季节性漂移致采样失衡）+ B（漏报 19 个标准高功率事件 mean 2242W，模型对部分 ON 上下文学习不足）+ C（6000 采样点 F1 小样本噪声）。详见 `REPORT_TEST.md` 分析专题
+- **下一会话待定**：据建议调参——增 max_samples_test 降噪声 / 增模型容量+训练样本 / 跨建筑验证 / 多种子（择一）
 
 ## 已完成
 
@@ -75,7 +74,10 @@
 
 - **\[2026-09-04]** **baseline 训练**：15 epoch 早停（patience=7，best\_epoch=8），cuda 59.1s。Test F1=0.792/P=0.952/R=0.678。val/test F1 gap 大（0.93→0.79）——test 段更难或分布漂移；Precision>Recall 模型偏保守漏报
 
-- **\[2026-09-04]** baseline 用 `conda run -n test_gpu python scripts/train.py`（非 run\_real.ps1，因 conda activate 在非交互 shell 可能失败）；run\_real.ps1 在交互式 PS 可用
+- **[2026-09-04]** baseline 用 `conda run -n test_gpu python scripts/train.py`（非 run_real.ps1，因 conda activate 在非交互 shell 可能失败）；run_real.ps1 在交互式 PS 可用
+- **[2026-09-04]** **F1 gap 分析**：val/test F1 差距（0.929→0.792）主因三：(A) test 段 ON 密度 0.88% > val 0.60%（季节性漂移），6000 采样暴露 59 vs 29 个 ON；(B) 漏报 19 个是标准高功率事件（mean 2242W，远超 500 阈值），模型对这些 aggregate 上下文学习不足（d_model=64/2 层容量受限）；(C) point-level F1 在 <1% ON 密度的 6000 采样上高方差。非主因：阈值边缘（漏报 2242W≫500W）、test 功率更低（2319≈2318W）、时间局部漂移（漏报均匀分布）
+- **[2026-09-04]** build_splits 用 `np.linspace` 等距抽样（非随机），max_samples 控制数量但保留时序稀疏结构；评估在 6000 点上算 F1，稀疏 ON（<1%）下小样本噪声大
+- **[2026-09-04]** F1 是 point-level（逐点 ON/OFF ≥ on_threshold），非 event-level；早停基于 val MAE（非 F1），best.pt 是 val MAE 最低的 ep8 模型
 
 ## 关键文件路径
 

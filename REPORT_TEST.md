@@ -2,33 +2,94 @@
 
 ***
 
+## \[2026-09-04] 专题：val/test F1 差距分析（baseline 延伸）
+- **类型**：分析专题（诊断 baseline val F1=0.929 vs test F1=0.792 的 0.137 gap 来源）
+- **方法**：`scripts/analyze_gap.py`——(1) 按 build_splits 时序 70/15/15 切分，统计 train/val/test 全量段的 target 分布（ON 点占比、事件数、事件时长、ON 功率）；(2) 复现 6000 点 linspace 采样，统计 val/test 采样到的真实 ON 数；(3) 加载 `reports/baseline/best.pt` 跑 test 6000 点预测，拆分 TP/FP/FN，分析漏报点的真实/预测功率特征与位置分布
+- **发现**：
+  1. **test 段 ON 密度高于 val（分布漂移）**——全量段统计：
+     - train: ON 占比 0.58%, 2392 事件, mean 时长 17.5 点(105s), mean 功率 2296W
+     - val:   ON 占比 0.60%, 481 事件, mean 时长 19.4 点, mean 功率 2318W
+     - test:  ON 占比 **0.88%**, 572 事件, mean 时长 **23.9 点**, mean 功率 2319W
+     - test 段（时间序列最后 15%，推测为季节性不同的时段）Kettle 用得更频繁、每次更久，但 ON 功率分布几乎相同（~2320W）
+  2. **6000 采样点的统计失衡**——linspace 等距抽样在 ON 更密的 test 段采到更多 ON：
+     - val 6000 采样：真实 ON = 29（0.48%）
+     - test 6000 采样：真实 ON = 59（0.98%，是 val 的 2 倍）
+     - 小样本下 F1 对少数漏报极敏感：19 个漏报 → recall=40/59=0.678；若多命中 4 个 → recall=0.746，F1 显著变化
+  3. **漏报的是标准高功率事件，非阈值边缘**：
+     - 19 个 FN 真实功率：mean=2242W, median=2338W, max=2436W（都是典型 kettle 加热功率，远超 500W 阈值）
+     - 19 个 FN 预测功率：mean=96W, max=489W（模型预测远低于阈值，完全没识别）
+     - 40 个 TP 真实功率 mean=2328W（与 FN 几乎相同），预测 mean=1746W（部分识别）
+     - 2 个 FP 真实功率=1W，预测=1759W（纯误报，量极少）
+     - 漏报位置在 test 段均匀分布（前1/3:6 中1/3:8 后1/3:5），非某段集中
+- **结论（gap 主因）**：
+  - **主因 A：test 段分布漂移致采样失衡**——test 段 ON 密度（0.88%）高于 val（0.60%），6000 采样暴露更多 ON 点（59 vs 29），放大了模型的漏报基数；若 val 同样 59 个 ON，其 recall 也可能下降
+  - **主因 B：模型对部分标准高功率事件学习不足**——漏报的 19 个事件真实功率 2242W（与命中的 2328W 无显著差异），说明模型不是因为"事件功率低难识别"，而是这些事件的 aggregate 上下文（window=128=12.8min）特征训练集见得不够，或模型容量（d_model=64/2 层）不足以区分。漏报预测功率 96W 说明模型对这些样本输出接近"OFF"
+  - **主因 C：小样本评估的统计噪声**——F1 在 59 个 ON 上算，19 个漏报占比敏感；point-level F1 在稀疏 ON（<1%）数据上本就高方差。val 的 29 个 ON 偏少，其 F1=0.93 也带噪声，不一定代表真实泛化
+  - **非主因**：不是阈值边缘问题（漏报功率 2242W ≫ 500W）；不是 test 事件功率更低（test 2319W ≈ val 2318W）；不是时间局部漂移（漏报均匀分布）
+- **建议（下一步调参方向，按优先级）**：
+  1. **增大评估样本**：`max_samples_test`/`max_samples_val` 6000→30000+ 或全量，降低 F1 统计噪声，得到更可信的 gap 度量（最便宜的改进）
+  2. **增模型容量 + 训练样本**：d_model 64→128、num_layers 2→3、max_samples_train 30k→100k+，让模型见更多 ON 上下文变体（针对主因 B）
+  3. **跨建筑验证**：用 building2/3 训练、building1 测试，看是否泛化更差（区分"分布漂移"vs"模型容量"）
+  4. **降 on_threshold 调参**：500W→200W 可能把预测 489W 的边缘 FN 拉成 TP，但本例 max FN 功率 2436W，降阈值帮助有限（针对主因 B 无效）
+  5. **多种子重训**：seed=42 单次结果，跑 seed=0/1 看漏报数方差，判断是模型不稳还是系统性缺陷
+- **是否进入 REPORT.md**：否（分析专题，待据建议跑实验后再沉淀稳定结论）
+
+***
+
 ## \[2026-09-04] 专题：Baseline 真实 UK-DALE 训练（Kettle Seq2Point）
+
 - **类型**：实验专题（完整 baseline 真实训练，**首个真实科学结果**，候选进 REPORT.md）
+
 - **目标与假设**：
+
   - 用 `ukdale_prepared.npz`（House 1 mains+kettle, 10.3M 对齐点）跑 `configs/baseline.yaml` 完整训练，验证真实 UK-DALE Kettle Seq2Point 指标达合理范围
+
   - 假设：30k 训练样本 + 30 epoch（patience=7 早停）足以学到 Kettle ON/OFF 模式，F1 应 > 0.5
+
 - **方法 / 数据 / 参数**：
+
   - 环境：conda `test_gpu`（Python 3.11.11, torch 2.3.1+cu121, cuda）
+
   - 数据：`D:\Work\testPython\datasets\ukdale_prepared.npz`（82.8MB，aggregate+target，10,344,744 对齐点，6s 采样）
-  - 划分：时序 70% train / 15% val / 15% test（`build_splits`），cap max_samples train=30000/val=6000/test=6000
-  - 模型：Transformer encoder Seq2Point，d_model=64, nhead=4, num_layers=2, dim_feedforward=128, dropout=0.10, window=128
-  - 训练：batch=128, lr=5e-4, weight_decay=1e-4, grad_clip=1.0, loss=MSE, seed=42, epochs=30, patience=7
-  - 评估：on_threshold=500W；指标 MAE/RMSE/R²/SAE/EnergyError/Precision/Recall/F1
+
+  - 划分：时序 70% train / 15% val / 15% test（`build_splits`），cap max\_samples train=30000/val=6000/test=6000
+
+  - 模型：Transformer encoder Seq2Point，d\_model=64, nhead=4, num\_layers=2, dim\_feedforward=128, dropout=0.10, window=128
+
+  - 训练：batch=128, lr=5e-4, weight\_decay=1e-4, grad\_clip=1.0, loss=MSE, seed=42, epochs=30, patience=7
+
+  - 评估：on\_threshold=500W；指标 MAE/RMSE/R²/SAE/EnergyError/Precision/Recall/F1
+
 - **结果 / 结论**：
-  - 训练：15 epoch 后早停（best_epoch=8），runtime 59.1s（cuda）
-  - best_epoch=8 val：MAE=3.98, RMSE=55.6, R²=0.8787, F1=0.9286（Precision=0.963/Recall=0.897）
+
+  - 训练：15 epoch 后早停（best\_epoch=8），runtime 59.1s（cuda）
+
+  - best\_epoch=8 val：MAE=3.98, RMSE=55.6, R²=0.8787, F1=0.9286（Precision=0.963/Recall=0.897）
+
   - **Test（best epoch 模型）**：
+
     - MAE=13.09, RMSE=145.64, R²=0.5921, SAE=0.403
+
     - **Precision=0.952, Recall=0.678, F1=0.792**
+
   - epoch 曲线：train MAE 18.66→5.99（ep1→14），val MAE 9.85→3.98（ep1→8 最佳）；val R² 0.617→0.879；val F1 0.754→0.929（ep8 峰值）。ep9 后 val 抖动（过拟合或分布漂移），早停于 ep15
+
   - 结论：**真实 baseline 达合理范围**。F1=0.79 高于预期门槛 0.5；Precision(0.95)明显高于 Recall(0.68)——模型偏保守，漏报多于误报。val/test F1 gap（0.93→0.79）较大，提示 test 段更难或分布漂移
+
   - 对比参考：nilmtk 文献 Kettle Seq2Point F1 通常 0.7-0.85（UK-DALE building1 跨建筑或同建筑时序划分），本结果 F1=0.79 落在合理区间
+
 - **是否进入 REPORT.md（稳定结论）**：**候选**——这是首个真实 baseline，指标合理且可复现。建议先跑 1-2 次重训（不同 seed）确认稳定性后再沉淀；或据 README §8 用 val 指标调参后再定
+
 - **遗留问题**：
+
   - val/test F1 gap 大（0.93→0.79）：可能 test 段 Kettle 事件分布不同，或过拟合 val；可尝试 (a) 更大 train 样本；(b) 调 dropout；(c) 跨建筑验证
-  - Recall< Precision：模型保守漏报；可降 on_threshold 或调 loss 权重
+
+  - Recall< Precision：模型保守漏报；可降 on\_threshold 或调 loss 权重
+
   - 单次训练（seed=42），未做多种子稳定性验证
+
   - meter10 插座共享噪声（kettle/food processor/sandwich maker）仍在 target 里
+
 - **相关产物**：`reports/baseline/{best.pt(280KB), history.json, result.json}`
 
 ***

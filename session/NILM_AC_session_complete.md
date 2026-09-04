@@ -238,3 +238,25 @@
   - 更新：`STATUS.md`、`REPORT_TEST.md`（追加 baseline 专题）、`session/NILM_AC_session_complete.md`
   - 产物：`reports/baseline/{history.json, result.json}`（提交）；`best.pt`（未提交）
 
+## [2026-09-04] 会话纪要（续：val/test F1 差距分析）
+- 目标：诊断 baseline val F1=0.929 vs test F1=0.792 的 0.137 gap 来源
+- 完成项：
+  - 读 `src/data.py::build_splits`（时序 70/15/15 + linspace 等距抽样）、`metrics.py`（F1 是 point-level，逐点 ≥on_threshold）、`trainer.py`（早停基于 val MAE 非 F1）
+  - 写 `scripts/analyze_gap.py`：(1) 全量段 target 分布统计；(2) 6000 采样点 ON 数对比；(3) 加载 best.pt 跑 test 预测，拆 TP/FP/FN 分析漏报功率与位置
+  - 跑分析，关键数据：
+    - 全量段 ON 占比：train 0.58% / val 0.60% / **test 0.88%**（test 更密集，季节性漂移）
+    - 6000 采样：val 真实 ON=29 / test=59（test 2x）
+    - 漏报 19 个：真实功率 mean=2242W（远超 500 阈值，标准高功率事件），预测功率 mean=96W（模型输出接近 OFF）
+    - 命中 40 个：真实 mean=2328W ≈ 漏报 2242W（功率无差异）
+    - 漏报位置均匀分布（前1/3:6 中:8 后:5）
+  - 结论：gap 三主因——(A) test ON 密度高致采样失衡；(B) 模型对部分标准 ON 上下文学习不足（容量/样本受限）；(C) 6000 采样小样本 F1 高方差
+- 关键决策：
+  - 保留 `analyze_gap.py` 为正式脚本（可复用诊断工具，未来调参可重跑）
+  - 分析结论放 REPORT_TEST.md（非稳定科学结果，待实验验证建议后沉淀）
+- 未决问题：
+  - 据建议调参方向待用户定（增样本/容量/跨建筑/多种子）
+- 相关文件/分支：
+  - 分支：`nilm-project-model-ritual-4zSHFv`
+  - 新建：`scripts/analyze_gap.py`
+  - 更新：`STATUS.md`、`REPORT_TEST.md`（追加分析专题）、`session/NILM_AC_session_complete.md`
+
