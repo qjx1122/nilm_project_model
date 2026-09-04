@@ -1,0 +1,53 @@
+{
+  "best_epoch": 8,
+  "device": "cuda",
+  "runtime_sec": 59.09044909477234,
+  "test": {
+    "mae": 13.087597423712413,
+    "rmse": 145.64246107727888,
+    "r2": 0.592076163585374,
+    "sae": 0.4030209498016519,
+    "energy_error": -0.4030209498016519,
+    "precision": 0.9523809523809523,
+    "recall": 0.6779661016949152,
+    "f1": 0.7920792079207921
+  },
+  "config": {
+    "seed": 42,
+    "device": "auto",
+    "data": {
+      "path": "",
+      "appliance": "kettle",
+      "window_size": 128,
+      "train_ratio": 0.7,
+      "val_ratio": 0.15,
+      "test_ratio": 0.15,
+      "max_samples_train": 30000,
+      "max_samples_val": 6000,
+      "max_samples_test": 6000
+    },
+    "model": {
+      "input_dim": 1,
+      "d_model": 64,
+      "nhead": 4,
+      "num_layers": 2,
+      "dim_feedforward": 128,
+      "dropout": 0.1
+    },
+    "training": {
+      "batch_size": 128,
+      "epochs": 30,
+      "lr": 0.0005,
+      "weight_decay": 0.0001,
+      "patience": 7,
+      "grad_clip": 1.0,
+      "loss": "mse"
+    },
+    "metrics": {
+      "on_threshold_watts": 500.0
+    }
+  },
+  "n_train": 30000,
+  "n_val": 6000,
+  "n_test": 6000
+}

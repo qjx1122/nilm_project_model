@@ -2,6 +2,37 @@
 
 ***
 
+## \[2026-09-04] 专题：Baseline 真实 UK-DALE 训练（Kettle Seq2Point）
+- **类型**：实验专题（完整 baseline 真实训练，**首个真实科学结果**，候选进 REPORT.md）
+- **目标与假设**：
+  - 用 `ukdale_prepared.npz`（House 1 mains+kettle, 10.3M 对齐点）跑 `configs/baseline.yaml` 完整训练，验证真实 UK-DALE Kettle Seq2Point 指标达合理范围
+  - 假设：30k 训练样本 + 30 epoch（patience=7 早停）足以学到 Kettle ON/OFF 模式，F1 应 > 0.5
+- **方法 / 数据 / 参数**：
+  - 环境：conda `test_gpu`（Python 3.11.11, torch 2.3.1+cu121, cuda）
+  - 数据：`D:\Work\testPython\datasets\ukdale_prepared.npz`（82.8MB，aggregate+target，10,344,744 对齐点，6s 采样）
+  - 划分：时序 70% train / 15% val / 15% test（`build_splits`），cap max_samples train=30000/val=6000/test=6000
+  - 模型：Transformer encoder Seq2Point，d_model=64, nhead=4, num_layers=2, dim_feedforward=128, dropout=0.10, window=128
+  - 训练：batch=128, lr=5e-4, weight_decay=1e-4, grad_clip=1.0, loss=MSE, seed=42, epochs=30, patience=7
+  - 评估：on_threshold=500W；指标 MAE/RMSE/R²/SAE/EnergyError/Precision/Recall/F1
+- **结果 / 结论**：
+  - 训练：15 epoch 后早停（best_epoch=8），runtime 59.1s（cuda）
+  - best_epoch=8 val：MAE=3.98, RMSE=55.6, R²=0.8787, F1=0.9286（Precision=0.963/Recall=0.897）
+  - **Test（best epoch 模型）**：
+    - MAE=13.09, RMSE=145.64, R²=0.5921, SAE=0.403
+    - **Precision=0.952, Recall=0.678, F1=0.792**
+  - epoch 曲线：train MAE 18.66→5.99（ep1→14），val MAE 9.85→3.98（ep1→8 最佳）；val R² 0.617→0.879；val F1 0.754→0.929（ep8 峰值）。ep9 后 val 抖动（过拟合或分布漂移），早停于 ep15
+  - 结论：**真实 baseline 达合理范围**。F1=0.79 高于预期门槛 0.5；Precision(0.95)明显高于 Recall(0.68)——模型偏保守，漏报多于误报。val/test F1 gap（0.93→0.79）较大，提示 test 段更难或分布漂移
+  - 对比参考：nilmtk 文献 Kettle Seq2Point F1 通常 0.7-0.85（UK-DALE building1 跨建筑或同建筑时序划分），本结果 F1=0.79 落在合理区间
+- **是否进入 REPORT.md（稳定结论）**：**候选**——这是首个真实 baseline，指标合理且可复现。建议先跑 1-2 次重训（不同 seed）确认稳定性后再沉淀；或据 README §8 用 val 指标调参后再定
+- **遗留问题**：
+  - val/test F1 gap 大（0.93→0.79）：可能 test 段 Kettle 事件分布不同，或过拟合 val；可尝试 (a) 更大 train 样本；(b) 调 dropout；(c) 跨建筑验证
+  - Recall< Precision：模型保守漏报；可降 on_threshold 或调 loss 权重
+  - 单次训练（seed=42），未做多种子稳定性验证
+  - meter10 插座共享噪声（kettle/food processor/sandwich maker）仍在 target 里
+- **相关产物**：`reports/baseline/{best.pt(280KB), history.json, result.json}`
+
+***
+
 ## \[2026-09-04] 专题：UK-DALE 预处理与真实数据链路验证
 
 - **类型**：实验专题（预处理脚本 + 真实数据链路验证，非完整 baseline 科学结果）
