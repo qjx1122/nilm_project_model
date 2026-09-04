@@ -11,11 +11,21 @@ from src.data import load_simple_npz, build_splits
 from src.model import NILMTransformer
 from src.trainer import run_epoch
 from src.metrics import regression_metrics
+import argparse
 
-NPZ = r"D:\Work\testPython\datasets\ukdale_prepared.npz"
-CFG = "configs/baseline.yaml"
-CKPT = "reports/baseline/best.pt"
-THRESH = 500.0
+_p = argparse.ArgumentParser(description="Analyze val/test F1 gap for a trained run")
+_p.add_argument("--npz", default=r"D:\Work\testPython\datasets\ukdale_prepared.npz",
+                help="path to ukdale_prepared.npz")
+_p.add_argument("--config", default="configs/baseline.yaml",
+                help="config yaml used for the run (for model/split params)")
+_p.add_argument("--ckpt", default="reports/baseline/best.pt",
+                help="path to best.pt of the run to analyze")
+_p.add_argument("--threshold", type=float, default=500.0)
+_args = _p.parse_args()
+NPZ = _args.npz
+CFG = _args.config
+CKPT = _args.ckpt
+THRESH = _args.threshold
 
 
 def find_runs(mask):

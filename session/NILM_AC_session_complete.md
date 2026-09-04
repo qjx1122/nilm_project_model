@@ -260,3 +260,33 @@
   - 新建：`scripts/analyze_gap.py`
   - 更新：`STATUS.md`、`REPORT_TEST.md`（追加分析专题）、`session/NILM_AC_session_complete.md`
 
+## [2026-09-04] 会话纪要（续：增评估样本对比）
+- 目标：验证 F1 gap 主因 C（小样本噪声）——增 max_samples_val/test 6000→30000 重训对比
+- 完成项：
+  - 建 `configs/baseline_allsample.yaml`（唯一改动 val/test 6000→30000，train/模型/seed=42 不变，保证模型轨迹同）
+  - 改 `scripts/analyze_gap.py` 加 argparse（`--npz --config --ckpt --threshold`），可分析任意 run
+  - 训练 `baseline_allsample`：cuda 74s，15 epoch 早停，best_epoch=8（与原一致，确认模型同）
+  - 跑 `analyze_gap.py --config baseline_allsample --ckpt reports/baseline_allsample/best.pt`
+  - 读 `history.json` 拿 ep8 val F1
+- 关键数据对比：
+  - val F1：0.929（29 ON，小样本）→ **0.830（173 ON，大样本）**，降 0.099
+  - test F1：0.792（59 ON）→ 0.783（266 ON），仅降 0.009
+  - gap：0.137 → **0.047（缩 65%）**
+  - 漏报特征一致：19 个 mean 2242W → 89 个 mean 2287W（标准高功率，非边缘）
+  - 漏报率稳定：19/59=32% → 89/266=33%
+- 结论：
+  - **原 gap 65% 来自 val 小样本乐观偏差**（29 ON 偏简单事件致 F1 虚高 0.929），非 test 异常难
+  - **test F1≈0.78 是真实泛化水平**（两次运行一致，漏报率稳定）
+  - 模型真实缺陷（主因 B）确认：漏报标准高功率事件 mean 2287W，预测功率 110W（≈OFF），但这是模型本身问题不造成 gap（val 同样漏报率）
+  - **评估应固定用大样本（≥30000）**避免小样本误导
+- 关键决策：
+  - 提交 `configs/baseline_allsample.yaml` + `reports/baseline_allsample/{history.json, result.json}`（best.pt 不提交）
+  - `baseline_allsample.yaml` 作后续实验默认评估配置
+- 未决问题：
+  - 优先级 2（增模型容量+训练样本）待下一会话
+- 相关文件/分支：
+  - 分支：`nilm-project-model-ritual-4zSHFv`
+  - 新建：`configs/baseline_allsample.yaml`
+  - 更新：`scripts/analyze_gap.py`（argparse）、`STATUS.md`、`REPORT_TEST.md`（增样本对比专题）、`session/NILM_AC_session_complete.md`
+  - 产物：`reports/baseline_allsample/{history.json, result.json}`（提交）；`best.pt`（未提交）
+

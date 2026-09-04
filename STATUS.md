@@ -2,8 +2,8 @@
 
 ## 当前目标
 
-- **本会话任务（已完成）**：分析 baseline val/test F1 差距（0.929→0.792，主因 Recall 0.897→0.678）。写 `scripts/analyze_gap.py` 诊断，结论：主因 A（test 段 ON 密度 0.88% > val 0.60%，季节性漂移致采样失衡）+ B（漏报 19 个标准高功率事件 mean 2242W，模型对部分 ON 上下文学习不足）+ C（6000 采样点 F1 小样本噪声）。详见 `REPORT_TEST.md` 分析专题
-- **下一会话待定**：据建议调参——增 max_samples_test 降噪声 / 增模型容量+训练样本 / 跨建筑验证 / 多种子（择一）
+- **本会话任务（已完成）**：增评估样本验证 F1 gap 主因——建 `configs/baseline_allsample.yaml`（val/test 6000→30000，train/模型/seed 不变），重训 + `analyze_gap.py` 对比。**结论：原 gap 0.137 的 65% 来自 val 小样本乐观偏差**（val F1 0.929→0.830，test F1 0.792→0.783 几乎不变），gap 缩到 0.047。模型真实 F1≈0.78，提升需改模型。详见 `REPORT_TEST.md` 增样本对比专题
+- **下一会话待定**：优先级 2——增模型容量（d_model 64→128, layers 2→3）+ 增训练样本（30k→100k+）提升真实 F1；评估固定用大样本（baseline_allsample 配置）
 
 ## 已完成
 
@@ -31,10 +31,10 @@
 
 ## 下一步（TODO）
 
-1. 据 README §8 用 val 指标调参：候选方向 (a) 增大 max\_samples\_train（30k→全量）(b) 调 dropout（0.10→0.15/0.20）(c) lr 调度（ReduceLROnPlateau）(d) 降 on\_threshold（500W→200W）提 Recall
-2. 多种子稳定性验证：seed=42 单次结果，跑 seed=0/1/123 重训看 F1 方差
-3. 跨建筑验证：用 building2/3/5 数据做泛化测试（需扩展 prepare\_ukdale.py 支持 building 参数——已支持 `--building`）
-4. 据稳定性/调参结果决定是否沉淀进 `REPORT.md`
+1. **增模型容量 + 训练样本**（优先级 2，现为下一实验）：d_model 64→128、num_layers 2→3、max_samples_train 30k→100k+，针对主因 B 提升真实 F1（当前 ~0.78）。**评估固定用 `configs/baseline_allsample.yaml`**（val/test≥30000）避免小样本误导
+2. 跨建筑验证：building2/3 训练、building1 测试（区分分布漂移 vs 容量），用大样本评估
+3. 多种子重训（seed=0/1）判模型稳定性，用大样本评估
+4. 据实验结果决定是否沉淀进 `REPORT.md`
 
 ## 决策记录 / 踩坑
 
@@ -102,6 +102,7 @@
 - Smoke 产物：`reports/smoke/{best.pt, history.json, result.json}`
 
 - Baseline 产物：`reports/baseline/{best.pt(280KB, 未提交), history.json, result.json}`
+- Baseline allsample 产物：`reports/baseline_allsample/{best.pt(未提交), history.json, result.json}`
 
 - 验证产物：`reports/verify_real/{best.pt, history.json, result.json}`（未提交，仅磁盘留证）
 
