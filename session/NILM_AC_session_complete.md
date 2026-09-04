@@ -1,0 +1,46 @@
+# NILM_AC 会话纪要（只追加）
+
+## [2026-09-04] 会话纪要
+- 目标：执行 BOOTSTRAP.md 开局仪式，恢复 NILM Transformer 项目现场
+- 完成项：
+  - 拉取 git 现状：分支 `nilm-project-model-ritual-4zSHFv`，工作树干净，最近 2 次提交（协议文档、原始代码）
+  - 验证远端可访问（`git ls-remote origin`，HTTPS，无需 gh CLI）
+  - 读取 README.md：确认实验目标（Kettle Seq2Point）、依赖（conda env `transformer_nilm` + `requirements.txt`）、入口（`scripts/run_smoke.py`）
+  - 按 BOOTSTRAP.md 模板创建 `STATUS.md` 续接骨架
+  - 创建 `session/` 目录与本纪要文件
+- 关键决策：
+  - 续接文件此前不存在，按 BOOTSTRAP.md v2.0 模板从零创建
+  - gh CLI 未安装，远端验证改用 `git ls-remote origin`，HTTPS 凭据可用
+  - `checkpoints/`、`logs/`、`data/` 暂不创建，待实际训练/下载数据时建立
+- 未决问题：
+  - 本会话具体目标待用户确认（smoke test / baseline / 真实 UK-DALE / 调优）
+  - conda env `transformer_nilm` 是否已创建待确认；若未创建需 `pip install -r requirements.txt`
+  - UK-DALE 数据尚未下载，真实实验指标无法立即产出
+- 相关文件/分支：
+  - 分支：`nilm-project-model-ritual-4zSHFv`（worktree session 分支）
+  - 新建：`STATUS.md`、`session/NILM_AC_session_complete.md`
+  - 参考：`BOOTSTRAP.md`、`README.md`
+
+## [2026-09-04] 会话纪要（续：Smoke test 任务）
+- 目标：在本地 conda `test_gpu` 环境运行 `scripts/run_smoke.py`，验证 NILM Transformer 代码链路
+- 完成项：
+  - 任务立项：登记到 STATUS.md，落盘「用 conda test_gpu 而非 README 默认 transformer_nilm」决策
+  - 环境恢复：`test_gpu`（Python 3.11.11, torch 2.3.1+cu121, numpy/pandas/sklearn/matplotlib/yaml/tqdm/h5py 全部满足 `requirements.txt` 下限）
+  - 入口核对：`run_smoke.py` 覆盖 `configs/baseline.yaml` 为小尺寸（window=64, d_model=32, 1 layer, 3 epochs），用相对路径→须在项目根目录执行
+  - 执行：`conda run -n test_gpu python scripts/run_smoke.py` 全链路跑通（device=cuda, runtime=4.74s），best_epoch=3
+  - 指标（合成信号，非 UK-DALE）：Test MAE=61.14, RMSE=175.70, R²=0.9062, SAE=0.0336, P/R/F1=1.0
+  - 产物：`reports/smoke/{best.pt, history.json, result.json}` 已生成
+  - 专题报告：首次创建 `REPORT_TEST.md`，追加本专题完整记录
+- 关键决策：
+  - 用 conda `test_gpu`（用户指定，本机已有 GPU 环境）替代 README §3 的 `transformer_nilm`
+  - 两条 PyTorch UserWarning（nested_tensor / flash attention）非致命，不阻塞验证
+  - Smoke test 指标不沉淀进 `REPORT.md`（仅链路验证，非稳定科学结论）
+  - `README.md` 不改：环境差异属用户本机偏好，非项目安装方式变更
+- 未决问题：
+  - 下一阶段方向待用户选择：baseline / 真实 UK-DALE / 调优
+  - ukdale.h5 数据未下载，真实实验需先准备数据
+- 相关文件/分支：
+  - 分支：`nilm-project-model-ritual-4zSHFv`
+  - 新建：`STATUS.md`、`session/NILM_AC_session_complete.md`、`REPORT_TEST.md`
+  - 产物：`reports/smoke/best.pt`、`reports/smoke/history.json`、`reports/smoke/result.json`
+  - 入口：`scripts/run_smoke.py`、`configs/baseline.yaml`、`src/data.py`、`src/experiment.py`
