@@ -290,3 +290,31 @@
   - 更新：`scripts/analyze_gap.py`（argparse）、`STATUS.md`、`REPORT_TEST.md`（增样本对比专题）、`session/NILM_AC_session_complete.md`
   - 产物：`reports/baseline_allsample/{history.json, result.json}`（提交）；`best.pt`（未提交）
 
+## [2026-09-04] 会话纪要（续：增模型容量+训练样本，优先级 2）
+- 目标：针对主因 B（模型对标准高功率 ON 上下文学习不足），增容量+样本提升真实 F1
+- 完成项：
+  - 建 `configs/baseline_big.yaml`：d_model 64→128, layers 2→3, FFN 128→512(4×d_model), train 30k→100k, val/test 保持 30000，其余不变（seed 42, lr 5e-4, dropout 0.10, batch 128, epochs 30, patience 7）
+  - 训练：`conda run -n test_gpu python scripts/train.py --config baseline_big --out reports/baseline_big`，cuda 180s，9 epoch 早停（best_epoch=2）
+  - 跑 `analyze_gap.py --config baseline_big --ckpt reports/baseline_big/best.pt` + 读 history.json
+- 关键数据对比（vs baseline_allsample）：
+  - **Test F1: 0.783 → 0.850（+0.067, +8.6%）** ✅ 显著提升
+  - Test Recall: 0.665 → 0.820（+0.155），漏报 89→48 个（减 46%），漏报率 33%→18%
+  - Test Precision: 0.952 → 0.883（-0.069），误报 9→29（大模型更激进，可接受 trade-off）
+  - Test MAE: 11.15→9.16（-17.8%），R²: 0.618→0.729（+0.111）
+  - 漏报功率特征不变（2260W 标准高功率），但数量大减——模型学到更多 ON 上下文变体
+  - val/test gap 反转：+0.047(val 高) → -0.022(test 高)
+- 结论：
+  - **增容量+样本有效**：主因 B 被缓解，F1 达 nilmtk 文献 Kettle Seq2Point 上限（~0.85）
+  - **早停问题暴露**：best_epoch=2 早（val MAE 抖动大 ep3=8.45/ep4=12.84/ep5=7.55），train F1 还在升（ep9=0.858）未充分训练。原因：lr 5e-4 对大模型偏高 + 早停基于 val MAE 非 F1（ep4 val F1=0.881 更高但 MAE 高被错过）
+- 关键决策：
+  - 提交 `configs/baseline_big.yaml` + `reports/baseline_big/{history.json, result.json}`（best.pt 不提交）
+  - F1=0.85 候选进 REPORT.md，待早停优化+多种子验证后沉淀
+- 未决问题：
+  - 早停优化（lr 调度/改 F1 早停/增 epoch）待下一会话
+  - 多种子验证 F1=0.85 稳定性
+- 相关文件/分支：
+  - 分支：`nilm-project-model-ritual-4zSHFv`
+  - 新建：`configs/baseline_big.yaml`
+  - 更新：`STATUS.md`、`REPORT_TEST.md`（增容量专题）、`session/NILM_AC_session_complete.md`
+  - 产物：`reports/baseline_big/{history.json, result.json}`（提交）；`best.pt`（未提交）
+

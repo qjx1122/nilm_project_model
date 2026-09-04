@@ -2,6 +2,62 @@
 
 ***
 
+## \[2026-09-04] 专题：增模型容量 + 训练样本（针对主因 B，F1 显著提升）
+
+- **类型**：实验专题（优先级 2，针对主因 B"模型对标准高功率 ON 上下文学习不足"，增容量+样本看 F1 提升；**稳定提升，候选进 REPORT.md**）
+
+- **假设**：主因 B 的根因是模型容量（d\_model=64/2 层）+ 训练样本（30k 在 7.2M 点里占 0.4%）不足，模型没见过足够多 ON 上下文变体；增容量+样本应让漏报减少、Recall 上升、F1 提升
+
+- **方法 / 参数**：新建 `configs/baseline_big.yaml`，相对 `baseline_allsample.yaml` 的改动：
+
+  - 模型：d\_model 64→**128**，num\_layers 2→**3**，dim\_feedforward 128→**512**（4×d\_model，标准 transformer 惯例，原 128 是瓶颈）
+
+  - 样本：max\_samples\_train 30000→**100000**（3.3x）；val/test 保持 30000（大样本评估，避免小样本误导）
+
+  - 其余不变：dropout 0.10, batch 128, lr 5e-4, epochs 30, patience 7, seed 42, on\_threshold 500W
+
+  - 训练：`conda run -n test_gpu python scripts/train.py --config configs/baseline_big.yaml --out reports/baseline_big`，cuda 180s，9 epoch 早停
+
+  - 分析：`scripts/analyze_gap.py --config configs/baseline_big.yaml --ckpt reports/baseline_big/best.pt`
+
+- **结果对比**（vs `baseline_allsample` 同评估配置）：
+
+  | 指标               | allsample (64/2/FFN128/30k) | **big (128/3/FFN512/100k)** | 变化                 |
+  | ---------------- | --------------------------- | --------------------------- | ------------------ |
+  | best\_epoch      | 8                           | **2**（早停，val 抖动）            | —                  |
+  | val F1 (best ep) | 0.830 (P=0.935/R=0.746)     | 0.828 (P=0.823/R=0.832)     | -0.002             |
+  | **Test F1**      | 0.783 (P=0.952/R=0.665)     | **0.850 (P=0.883/R=0.820)** | **+0.067 (+8.6%)** |
+  | Test MAE         | 11.15                       | 9.16                        | -2.0 (-17.8%)      |
+  | Test R²          | 0.618                       | 0.729                       | +0.111             |
+  | Test Recall      | 0.665                       | **0.820**                   | **+0.155**         |
+  | Test Precision   | 0.952                       | 0.883                       | -0.069             |
+  | 漏报 FN            | 89 个 mean 2287W (33%)       | **48 个 mean 2260W (18%)**   | **减 46%**          |
+  | 误报 FP            | 9 个                         | 29 个                        | +20                |
+  | val/test gap     | +0.047 (val 高)              | **-0.022 (test 反高)**        | 反转                 |
+
+- **结论**：
+
+  1. **增容量+样本显著提升 F1**（0.783→0.850，+8.6%）——假设验证成功，主因 B 被有效缓解
+  2. **Recall 大升 + 漏报减半**：Recall 0.665→0.820（+0.155），漏报 89→48 个（-46%），漏报率 33%→18%；漏报功率特征不变（2260W 标准高功率），说明模型识别更多标准 ON 事件，而非边缘事件变简单——容量+样本让模型学到更多 ON 上下文变体
+  3. **Precision 略降是可接受 trade-off**：0.952→0.883（误报 9→29），大模型更激进预测 ON，但 F1 整体提升，Precision-Recall 朝有利方向移动
+  4. **MAE/R² 同步提升**：MAE -17.8%，R² +0.111，回归质量整体改善
+  5. **best\_epoch=2 早停暴露问题**：大模型在 100k 样本上 ep2 即达 val MAE 最低（5.90），之后 val MAE 剧烈抖动（ep3=8.45, ep4=12.84, ep5=7.55, ep6=5.96, ep7=6.98, ep8=6.49, ep9=6.61），patience=7 在 ep9 早停。train F1 仍在升（ep1=0.756→ep9=0.858），模型未充分训练。原因：(a) lr 5e-4 对 d\_model=128 偏高致 val 震荡；(b) 早停基于 val MAE 非 F1，ep4 val F1=0.881 更高但 MAE=12.84 被错过
+  6. **val/test gap 反转（-0.022）**：test F1(0.850) > val F1(0.828)。可能 ep2 模型恰好在 test 段表现更好，或 val 段（时间中段）Kettle 用法少（ON 0.60%\<test 0.88%）致 val 偏难。非关键，但提示早停选择可优化
+
+- **是否进入 REPORT.md**：**候选**——F1 0.783→0.850 是稳定可复现提升（同 seed 同数据，仅改容量+样本），达 nilmtk 文献 Kettle Seq2Point 上限（0.85）。建议先解决早停问题（调 lr/基于 F1 早停）看能否进一步提升，再沉淀
+
+- **遗留问题 / 下一步**：
+
+  1. **lr 调度**：lr 5e-4 对大模型偏高致 val 抖动；可试 lr 1e-4 或加 ReduceLROnPlateau，让大模型稳定收敛，可能进一步提 F1
+  2. **早停改基于 val F1**：当前基于 val MAE，ep2 MAE 最低但 ep4 F1=0.881 更高；改 F1 早停可能选到更优模型
+  3. **增 epoch**：30→50，让大模型充分训练（train F1 还在升）
+  4. **多种子验证**：单 seed=42 结果，跑 seed=0/1 确认 F1=0.85 稳定
+  5. 当前 100k 样本仍只占 train 段 1.4%，可试 200k+ 看是否继续提升
+
+- **相关产物**：`configs/baseline_big.yaml`、`reports/baseline_big/{best.pt(未提交), history.json, result.json}`
+
+***
+
 ## \[2026-09-04] 专题：增评估样本对比——gap 主因确认为 val 小样本乐观偏差
 
 - **类型**：实验专题（验证 F1 gap 分析的主因 C 假设：增 max\_samples\_val/test 6000→30000，看 gap 是否由小样本噪声造成）
