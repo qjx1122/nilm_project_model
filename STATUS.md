@@ -24,10 +24,9 @@
 
 ## 下一步（TODO）
 
-1. **写预处理脚本** `scripts/prepare_ukdale.py`：从 `D:\Work\testPython\datasets\ukdale.h5` 提取 House 1 的 aggregate(mains) + kettle(appliance) 功率序列，按 README §9 时序划分（train 70% / val 15% / test 15%）保存为 `ukdale_prepared.npz`（含 `aggregate`、`target` 两数组，符合 `src/data.py::load_simple_npz` 期望）
-2. 预处理脚本依赖 nilmtk（未装于 `test_gpu`）——需 `pip install nilmtk` 或改用 h5py 直接读（需探查 building1 内 elec/meter/key 结构）
-3. 跑 `run_real.ps1`（设 `UKDALE_PREPARED_NPZ` 指向 npz，用 `conda activate test_gpu` 替代 README 默认 `transformer_nilm`）
-4. 真实 Kettle 指标产出后，视稳定程度决定是否沉淀进 `REPORT.md`
+1. 跑完整 baseline：`$env:UKDALE_PREPARED_NPZ="D:\Work\testPython\datasets\ukdale_prepared.npz"; conda run -n test_gpu python scripts/train.py --config configs/baseline.yaml --data-path $env:UKDALE_PREPARED_NPZ --out reports/baseline`（30 epoch，30k 样本，按 README §8 据 val 调参）
+2. 改 `run_real.ps1` 用 `conda activate test_gpu`（替代 README 默认 `transformer_nilm`），或直接用 `conda run -n test_gpu` 调用
+3. 真实 Kettle 指标产出后，视稳定程度决定是否沉淀进 `REPORT.md`
 
 ## 决策记录 / 踩坑
 
@@ -67,5 +66,11 @@
 
 - 数据：`D:\Work\testPython\datasets\ukdale.h5`（3.19GB，用户手动下载，NILMTK HDF5，5 buildings）
 
+- 预处理：`D:\Work\testPython\datasets\ukdale_prepared.npz`（82.8MB，10.3M 对齐点，aggregate+target）
+
+- 预处理脚本：`scripts/prepare_ukdale.py`
+
 - Smoke 产物：`reports/smoke/{best.pt, history.json, result.json}`
+
+- 验证产物：`reports/verify_real/{best.pt, history.json, result.json}`（未提交，仅磁盘留证）
 

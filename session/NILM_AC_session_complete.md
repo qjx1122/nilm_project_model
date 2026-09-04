@@ -70,3 +70,29 @@
   - 数据：`D:\Work\testPython\datasets\ukdale.h5`（3.19GB）、`ukdale.h5.tgz`（2.84GB）
   - 验证脚本：`scripts/inspect_h5.py`
   - 数据流参考：`src/data.py`、`scripts/train.py`、`run_real.ps1`、`configs/baseline.yaml`
+
+## [2026-09-04] 会话纪要（续：UK-DALE 预处理脚本）
+- 目标：写 `scripts/prepare_ukdale.py`，把 `ukdale.h5` 转成 `ukdale_prepared.npz`，打通真实数据训练链路
+- 完成项：
+  - 探查 `ukdale.h5` 结构：`building1/elec/meter1-54`，每个 meter 是 pandas pytables table（`meterN/table` shape=(N,) dtype=[('index','<i8'),('values_block_0','<f4',(1,))]）
+  - 定位 meter：从 `building1.attrs['metadata']`（pickle dict）反序列化，`elec_meters` 含 site_meter 标志、`appliances` 含 type→meters 映射。**mains=meter1, kettle=meter10**（meter10 还被 food processor/sandwich maker 共享，nilmtk 标准取首个 type=kettle）
+  - 尝试装 nilmtk：清华镜像无、GitHub SSL 被墙。改纯 h5py+pandas+metadata pickle 方案，无 nilmtk 依赖
+  - 装 `tables 3.11.1`（pytables）到 `test_gpu`（pandas.read_hdf 需它；h5py `ds[:]` 读 pytables table 报 `can't open directory`）
+  - 写 `scripts/prepare_ukdale.py`：读 metadata→定位 meter→`pd.read_hdf` 读 mains+target→`resample('6s').mean()`→`concat(inner)`→`ffill(5).dropna()`→存 npz(aggregate,target)
+  - 跑脚本：输出 `ukdale_prepared.npz`（82.8MB，10.3M 对齐点）。aggregate mean=368.7W/max=8423W，target mean=15.5W/max=3948W/frac>50W=0.64%（kettle 特征合理）
+  - 验证：`load_simple_npz` 加载 + `train_experiment`（2 epoch, 4k 样本, cuda, 1.6s）端到端跑通，best_epoch=1, Test MAE=38.21/R²=0.1147/F1=0（指标差属预期，仅链路验证）
+  - 删除临时探查脚本 `_probe_h5.py`/`_verify_npz.py`
+- 关键决策：
+  - 纯 h5py+metadata pickle 方案（nilmtk 不可达），无新 nilmtk 依赖，脚本自包含
+  - meter10 接受插座共享噪声（与 nilmtk 标准一致），暂不子筛选
+  - 对齐用 inner-join + ffill(5) + dropna，去掉无重叠段和长 gap
+  - `reports/verify_real/` 产物不提交（仅验证非正式实验）
+- 未决问题：
+  - `requirements.txt` 应补 `tables` 依赖（落决策记录，待统一更新）
+  - `run_real.ps1` 默认 `conda activate transformer_nilm`，需改 `test_gpu`（或用 `conda run -n test_gpu`）
+  - 正式 baseline（30 epoch, 30k 样本）待下一会话跑
+- 相关文件/分支：
+  - 分支：`nilm-project-model-ritual-4zSHFv`
+  - 新建：`scripts/prepare_ukdale.py`
+  - 更新：`STATUS.md`、`REPORT_TEST.md`（追加预处理专题）、`session/NILM_AC_session_complete.md`
+  - 产物：`D:\Work\testPython\datasets\ukdale_prepared.npz`（82.8MB）、`reports/verify_real/{best.pt,history.json,result.json}`（未提交）
