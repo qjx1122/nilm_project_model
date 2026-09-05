@@ -40,12 +40,15 @@ def train_experiment(aggregate, target, cfg, out_dir):
         dcfg.get("max_samples_train"), dcfg.get("max_samples_val"),
         dcfg.get("max_samples_test"),
         event_boost=dcfg.get("event_boost"),
+        roll_jitter=int(dcfg.get("roll_jitter", 0)),
     )
     train_loader = DataLoader(train_ds, batch_size=tcfg["batch_size"], shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=tcfg["batch_size"], shuffle=False)
     test_loader = DataLoader(test_ds, batch_size=tcfg["batch_size"], shuffle=False)
 
     model = NILMTransformer(**mcfg).to(device)
+    if tcfg.get("init_ckpt"):
+        model.load_state_dict(torch.load(tcfg["init_ckpt"], map_location=device))
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=tcfg["lr"], weight_decay=tcfg["weight_decay"]
     )

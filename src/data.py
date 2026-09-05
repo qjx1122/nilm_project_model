@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 
 class WindowDataset(Dataset):
     def __init__(self, aggregate, target, window_size, indices, x_mean, x_std, y_mean, y_std,
-                 sample_range=None, event_pool=None, event_frac=0.0):
+                 sample_range=None, event_pool=None, event_frac=0.0, roll_jitter=0):
         self.aggregate = aggregate.astype(np.float32)
         self.target = target.astype(np.float32)
         self.window = int(window_size)
@@ -16,6 +16,11 @@ class WindowDataset(Dataset):
         self.sample_range = sample_range      # (lo, hi): enables fresh per-epoch draws
         self.event_pool = event_pool          # active centers for event-oversampled draws
         self.event_frac = float(event_frac)
+        # Train-only augmentation: shift the input window by ±roll_jitter samples while the
+        # center label stays fixed. Teaches alignment invariance against sub-meter/aggregate
+        # clock skew (diagnostic: ~13/28 F8 FNs fire under a ±2 roll).
+        self.roll_jitter = int(roll_jitter)
+        self._rng = np.random.default_rng(12345)
 
     def resample(self, epoch):
         """Re-draw window centers for a fresh stochastic epoch (train set only)."""
@@ -40,6 +45,9 @@ class WindowDataset(Dataset):
         center = int(self.indices[i])
         half = self.window // 2
         start = center - half
+        if self.roll_jitter > 0:
+            lo = int(self._rng.integers(-self.roll_jitter, self.roll_jitter + 1))
+            start = min(max(start + lo, 0), len(self.aggregate) - self.window)
         end = start + self.window
         x = (self.aggregate[start:end] - self.x_mean) / self.x_std
         y = (self.target[center] - self.y_mean) / self.y_std
@@ -61,7 +69,8 @@ def make_synthetic_signal(n=12000, seed=42):
 
 
 def build_splits(aggregate, target, window, train_ratio=0.7, val_ratio=0.15,
-                 max_train=None, max_val=None, max_test=None, event_boost=None):
+                 max_train=None, max_val=None, max_test=None, event_boost=None,
+                 roll_jitter=0):
     n = len(aggregate)
     a = int(n * train_ratio)
     b = int(n * (train_ratio + val_ratio))
@@ -105,7 +114,8 @@ def build_splits(aggregate, target, window, train_ratio=0.7, val_ratio=0.15,
                              sample_range=(window // 2, max(a - window // 2, window // 2 + 1))
                              if event_pool is not None else None,
                              event_pool=event_pool,
-                             event_frac=float(event_boost.get("event_frac", 0.4)) if event_pool is not None else 0.0)
+                             event_frac=float(event_boost.get("event_frac", 0.4)) if event_pool is not None else 0.0,
+                             roll_jitter=int(roll_jitter))
     return (
         train_ds,
         WindowDataset(aggregate, target, window, val_centers, x_mean, x_std, y_mean, y_std),

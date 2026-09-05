@@ -22,9 +22,12 @@
 - [x] **调参专题全流程**（13 次真实数据训练，累计约 55 分钟 GPU 时当）：Phase1 六泳道 → Phase2 组合 → 同尺度 A/B → F2 全量 → F3+cosine 胜出；新增 `scripts/eval_ckpt.py` 与 opt-in `lr_schedule: cosine`；`REPORT.md` 建立（算法路线/KPI 口径/稳定结论/推荐版本）；README 同步；`__pycache__` 出库
 
 ## 进行中
-- **F8(容量 d128/4L+stochastic+wavg4)已证实为最强配方**：稠密 test MAE **7.37W**（新王，前最佳 F3 8.58）/ R² .725 / 协议点 P .952 R .744；前沿 t=55 **max-min(P,R)=.895**（P.895/R.895，TP238/266）——距双 0.9 仅差 ~2 TP 的样本量！被 timeout(4800s) 截死于 ep23（ep22 val MAE 3.57 仍在改善、wavg 未及执行），**决定重跑全长版 F10**（epochs=30, timeout≥9600s, 完整 wavg）。
-- F9（F7 配方 + λ2 + minprf 选点）在跑（11:09 起，ETA≈11:4x）。
-- 若 F10 前沿 max-min≥0.9：以 val minprf（或 MAE）定选点、500W 协议点复评并定稿；若仍差最后一口气：尝试 3-seed F8 型集成（max 仅在同强模型间用，勿混 d64 弱模型——已证稀释）。
+- **F8(容量 d128/4L+stochastic+wavg4)已证实为最强配方**：稠密 test MAE **7.37W**（新王，前最佳 F3 8.58）/ R² .725 / 协议点 P .952 R .744；前沿 t=55 **max-min(P,R)=.895**（P.895/R.895，TP238/266）——距双 0.9 仅差 ~2 TP 的样本量！被 timeout(4800s) 截死于 ep23（ep22 val MAE 3.57 仍在改善、wavg 未及执行）。快照权重存 reports/tune_f8_big/ep22_val3.57.pt。
+- F9（λ2×minprf 选点）**死路确认**：MAE 12.38 / P .919 / R .767（best_ep5 早早截停）——λ 系列全灭（2/3/8 三档均劣于 λ1）。
+- **F10 事故**：11:37 我并行跑的 TTA 扫描(≈1GB)+F10(d128,RSS1.48GB) 触发全局 OOM，F10 被内核击杀（只活到 ep5）。教训：**与 d128 泳道并行期间禁止任何第二进程**。F10(无jitter对照)暂不重跑——F11 结果决定是否需要。
+- TTA 复核（修正归一化后，roll=0 与保存预测 corr=1.000）：F8 的 28 个 FN 中 13/28 在 ±2 roll 下被同一模型检出（-3:13 / -2:12 / -1:8 / +1:3 / +2:5 / +3:6）——对齐敏感性真实存在；但推理侧 TTA mean±1 前沿仅 .896（原始 .895）、MAE 反升至 7.69 → **post-hoc TTA 死路**，正确做法=训练时 roll-jitter 增强（已实现 `data.roll_jitter`，pytest+冒烟过；顺带加了 `training.init_ckpt` 热启动，冒烟显示 F8 权重 warm-start 首 epoch val MAE 1.65）。
+- **F11（F10 全长配方 + roll_jitter=2）11:58 开跑**，timeout 8400s + 缺 result.json 自动兜底 eval_ckpt，ETA≈13:05。
+- 判定计划：F11 完赛后 threshold_scan 全网格 → 若 max-min(P,R)>0.9 则定 F11 为新稳定版（REPORT.md §4 换锚），并复验 500W 协议点+MAE≤6W 进度；若仍 .89x，则从 F8/F11 权重 warm-start（init_ckpt）+更多 epoch 做 F12；同强模型间 max 集成最后再试（勿混 d64 弱模型——已证稀释）。
 
 ## 下一步（TODO）
 1. **多 seed 复验**：F3/drop0 结论差距多在 0.3–1.5W val MAE 量级、单 seed=42；对 `tune_final_f3_cosine` 用 seed 43/44 复验后再扩大结论

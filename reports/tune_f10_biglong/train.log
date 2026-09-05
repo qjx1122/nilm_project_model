@@ -1,0 +1,7 @@
+/home/user/nilm_project_model/src/model.py:48: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
+Epoch 001 | train MAE=16.40 | val MAE=5.24 | val F1=0.876 | train R2=0.3999 | val R2=0.8162
+Epoch 002 | train MAE=8.57 | val MAE=6.03 | val F1=0.839 | train R2=0.7275 | val R2=0.8070
+Epoch 003 | train MAE=7.84 | val MAE=8.99 | val F1=0.857 | train R2=0.7372 | val R2=0.7324
+Epoch 004 | train MAE=13.00 | val MAE=7.83 | val F1=0.894 | train R2=0.5746 | val R2=0.8259
+Epoch 005 | train MAE=9.25 | val MAE=4.34 | val F1=0.874 | train R2=0.6760 | val R2=0.7827

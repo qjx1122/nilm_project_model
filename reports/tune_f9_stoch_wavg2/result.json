@@ -1,0 +1,63 @@
+{
+  "best_epoch": 5,
+  "device": "cpu",
+  "runtime_sec": 454.29900884628296,
+  "test": {
+    "mae": 12.384060839478176,
+    "rmse": 120.41515439428196,
+    "r2": 0.6940850706736683,
+    "sae": 0.03532559844412593,
+    "energy_error": -0.03532559844412593,
+    "precision": 0.918918918918919,
+    "recall": 0.7669172932330827,
+    "f1": 0.8360655737704918
+  },
+  "config": {
+    "seed": 42,
+    "device": "cpu",
+    "data": {
+      "path": "",
+      "appliance": "kettle",
+      "window_size": 128,
+      "train_ratio": 0.7,
+      "val_ratio": 0.15,
+      "test_ratio": 0.15,
+      "max_samples_train": 30000,
+      "max_samples_val": 8000,
+      "max_samples_test": 30000,
+      "event_boost": {
+        "threshold_w": 500.0,
+        "max_extra": 15000,
+        "stochastic_epochs": true,
+        "event_frac": 0.45
+      }
+    },
+    "model": {
+      "input_dim": 1,
+      "d_model": 64,
+      "nhead": 4,
+      "num_layers": 2,
+      "dim_feedforward": 128,
+      "dropout": 0.0
+    },
+    "training": {
+      "batch_size": 128,
+      "epochs": 20,
+      "lr": 0.0005,
+      "weight_decay": 0.0001,
+      "patience": 5,
+      "grad_clip": 1.0,
+      "loss": "mse",
+      "event_weight": 2.0,
+      "select_on": "minprf",
+      "lr_schedule": "cosine",
+      "weight_avg": 4
+    },
+    "metrics": {
+      "on_threshold_watts": 500.0
+    }
+  },
+  "n_train": 30000,
+  "n_val": 8000,
+  "n_test": 30000
+}
