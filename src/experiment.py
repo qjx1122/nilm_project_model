@@ -62,7 +62,8 @@ def train_experiment(aggregate, target, cfg, out_dir):
         out_dir / "best.pt",
         cfg["metrics"]["on_threshold_watts"],
         tcfg["loss"], tcfg["grad_clip"], scheduler,
-        float(tcfg.get("event_weight", 1.0)), tcfg.get("select_on", "mae")
+        float(tcfg.get("event_weight", 1.0)), tcfg.get("select_on", "mae"),
+        int(tcfg.get("weight_avg", 1))
     )
 
     model.load_state_dict(torch.load(out_dir / "best.pt", map_location=device))

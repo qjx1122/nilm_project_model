@@ -1,0 +1,14 @@
+/home/user/nilm_project_model/src/model.py:48: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
+Epoch 001 | train MAE=19.89 | val MAE=11.95 | val F1=0.805 | train R2=0.3694 | val R2=0.6322
+Epoch 002 | train MAE=11.38 | val MAE=9.70 | val F1=0.839 | train R2=0.6660 | val R2=0.7950
+Epoch 003 | train MAE=10.55 | val MAE=9.59 | val F1=0.830 | train R2=0.6853 | val R2=0.7648
+Epoch 004 | train MAE=10.35 | val MAE=11.71 | val F1=0.694 | train R2=0.6306 | val R2=0.5397
+Epoch 005 | train MAE=9.47 | val MAE=8.31 | val F1=0.851 | train R2=0.6893 | val R2=0.7541
+Epoch 006 | train MAE=8.24 | val MAE=8.39 | val F1=0.897 | train R2=0.7246 | val R2=0.8344
+Epoch 007 | train MAE=9.03 | val MAE=5.91 | val F1=0.894 | train R2=0.7046 | val R2=0.8438
+Epoch 008 | train MAE=7.20 | val MAE=5.69 | val F1=0.884 | train R2=0.7337 | val R2=0.8214
+Epoch 009 | train MAE=6.76 | val MAE=11.48 | val F1=0.894 | train R2=0.7554 | val R2=0.8275
+Epoch 010 | train MAE=6.90 | val MAE=6.70 | val F1=0.886 | train R2=0.7510 | val R2=0.8222
+Epoch 011 | train MAE=6.47 | val MAE=6.61 | val F1=0.819 | train R2=0.7578 | val R2=0.7184
+{'best_epoch': 6, 'device': 'cpu', 'runtime_sec': 560.4773871898651, 'test': {'mae': 13.749369294230144, 'rmse': 118.18790540930328, 'r2': 0.7052970724192427, 'sae': 0.08096959238055002, 'energy_error': -0.08096959238055002, 'precision': 0.9155555555555556, 'recall': 0.7744360902255639, 'f1': 0.8391038696537679}, 'config': {'seed': 42, 'device': 'cpu', 'data': {'path': '', 'appliance': 'kettle', 'window_size': 128, 'train_ratio': 0.7, 'val_ratio': 0.15, 'test_ratio': 0.15, 'max_samples_train': 30000, 'max_samples_val': 8000, 'max_samples_test': 30000}, 'model': {'input_dim': 1, 'd_model': 64, 'nhead': 4, 'num_layers': 2, 'dim_feedforward': 128, 'dropout': 0.0}, 'training': {'batch_size': 128, 'epochs': 20, 'lr': 0.0005, 'weight_decay': 0.0001, 'patience': 5, 'grad_clip': 1.0, 'loss': 'mse', 'lr_schedule': 'cosine', 'event_weight': 8.0, 'select_on': 'f1'}, 'metrics': {'on_threshold_watts': 500.0}}, 'n_train': 30000, 'n_val': 8000, 'n_test': 30000}

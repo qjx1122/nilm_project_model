@@ -5,13 +5,33 @@ from torch.utils.data import Dataset
 
 
 class WindowDataset(Dataset):
-    def __init__(self, aggregate, target, window_size, indices, x_mean, x_std, y_mean, y_std):
+    def __init__(self, aggregate, target, window_size, indices, x_mean, x_std, y_mean, y_std,
+                 sample_range=None, event_pool=None, event_frac=0.0):
         self.aggregate = aggregate.astype(np.float32)
         self.target = target.astype(np.float32)
         self.window = int(window_size)
         self.indices = np.asarray(indices, dtype=np.int64)
         self.x_mean, self.x_std = float(x_mean), float(x_std)
         self.y_mean, self.y_std = float(y_mean), float(y_std)
+        self.sample_range = sample_range      # (lo, hi): enables fresh per-epoch draws
+        self.event_pool = event_pool          # active centers for event-oversampled draws
+        self.event_frac = float(event_frac)
+
+    def resample(self, epoch):
+        """Re-draw window centers for a fresh stochastic epoch (train set only)."""
+        if self.sample_range is None:
+            return
+        rng = np.random.default_rng(20240605 + int(epoch))
+        n = len(self.indices)
+        if self.event_pool is not None and len(self.event_pool) and self.event_frac > 0:
+            n_ev = int(n * self.event_frac)
+            ev = rng.choice(self.event_pool, size=n_ev, replace=True)
+            lo, hi = self.sample_range
+            rnd = rng.integers(lo, hi, size=n - n_ev, dtype=np.int64)
+            self.indices = np.concatenate([ev, rnd])
+        else:
+            lo, hi = self.sample_range
+            self.indices = rng.integers(lo, hi, size=n, dtype=np.int64)
 
     def __len__(self):
         return len(self.indices)
@@ -56,6 +76,7 @@ def build_splits(aggregate, target, window, train_ratio=0.7, val_ratio=0.15,
     # Event-stratified training sampling: after uniform subsampling, additionally include
     # centers where the appliance is active (target >= threshold), so short events are not
     # missed. Validation/test yardsticks are intentionally unaffected.
+    event_pool = None
     if event_boost:
         thr = float(event_boost.get("threshold_w", 500.0))
         max_extra = int(event_boost.get("max_extra", 10000))
@@ -65,7 +86,10 @@ def build_splits(aggregate, target, window, train_ratio=0.7, val_ratio=0.15,
         if max_extra and len(active) > max_extra:
             active = np.linspace(active[0], active[-1], max_extra).astype(np.int64)
         if len(active):
-            train_centers = np.unique(np.concatenate([train_centers, active]))
+            if event_boost.get("stochastic_epochs"):
+                event_pool = active  # per-epoch fresh draws instead of static concatenation
+            else:
+                train_centers = np.unique(np.concatenate([train_centers, active]))
     if max_val and len(val_centers) > max_val:
         val_centers = np.linspace(val_centers[0], val_centers[-1], max_val).astype(np.int64)
     if max_test and len(test_centers) > max_test:
@@ -77,8 +101,13 @@ def build_splits(aggregate, target, window, train_ratio=0.7, val_ratio=0.15,
     x_mean, x_std = float(train_x.mean()), float(train_x.std() + 1e-6)
     y_mean, y_std = float(train_y.mean()), float(train_y.std() + 1e-6)
 
+    train_ds = WindowDataset(aggregate, target, window, train_centers, x_mean, x_std, y_mean, y_std,
+                             sample_range=(window // 2, max(a - window // 2, window // 2 + 1))
+                             if event_pool is not None else None,
+                             event_pool=event_pool,
+                             event_frac=float(event_boost.get("event_frac", 0.4)) if event_pool is not None else 0.0)
     return (
-        WindowDataset(aggregate, target, window, train_centers, x_mean, x_std, y_mean, y_std),
+        train_ds,
         WindowDataset(aggregate, target, window, val_centers, x_mean, x_std, y_mean, y_std),
         WindowDataset(aggregate, target, window, test_centers, x_mean, x_std, y_mean, y_std),
     )

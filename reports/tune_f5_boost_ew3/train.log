@@ -1,2 +1,19 @@
 /home/user/nilm_project_model/src/model.py:48: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
   self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
+Epoch 001 | train MAE=18.05 | val MAE=11.62 | val F1=0.800 | train R2=0.4246 | val R2=0.6908
+Epoch 002 | train MAE=10.37 | val MAE=6.85 | val F1=0.848 | train R2=0.6876 | val R2=0.8021
+Epoch 003 | train MAE=8.64 | val MAE=9.57 | val F1=0.857 | train R2=0.7092 | val R2=0.7987
+Epoch 004 | train MAE=10.40 | val MAE=6.44 | val F1=0.876 | train R2=0.6818 | val R2=0.8254
+Epoch 005 | train MAE=8.21 | val MAE=7.92 | val F1=0.874 | train R2=0.7354 | val R2=0.8150
+Epoch 006 | train MAE=8.50 | val MAE=7.68 | val F1=0.854 | train R2=0.7418 | val R2=0.7992
+Epoch 007 | train MAE=7.28 | val MAE=7.20 | val F1=0.884 | train R2=0.7638 | val R2=0.8242
+Epoch 008 | train MAE=7.23 | val MAE=5.63 | val F1=0.884 | train R2=0.7501 | val R2=0.8337
+Epoch 009 | train MAE=6.67 | val MAE=8.55 | val F1=0.835 | train R2=0.7719 | val R2=0.7901
+Epoch 010 | train MAE=6.97 | val MAE=6.05 | val F1=0.884 | train R2=0.7679 | val R2=0.8090
+Epoch 011 | train MAE=6.70 | val MAE=4.90 | val F1=0.894 | train R2=0.7643 | val R2=0.8228
+Epoch 012 | train MAE=5.70 | val MAE=5.68 | val F1=0.884 | train R2=0.7966 | val R2=0.8179
+Epoch 013 | train MAE=5.56 | val MAE=5.79 | val F1=0.884 | train R2=0.8024 | val R2=0.8359
+Epoch 014 | train MAE=5.18 | val MAE=4.46 | val F1=0.884 | train R2=0.8076 | val R2=0.8233
+Epoch 015 | train MAE=4.84 | val MAE=3.98 | val F1=0.881 | train R2=0.8224 | val R2=0.8359
+Epoch 016 | train MAE=4.63 | val MAE=4.06 | val F1=0.884 | train R2=0.8186 | val R2=0.8344
+{'best_epoch': 11, 'device': 'cpu', 'runtime_sec': 1182.4148411750793, 'test': {'mae': 9.60636385939916, 'rmse': 121.49056289169957, 'r2': 0.6885965162514414, 'sae': 0.18264622720425627, 'energy_error': -0.18264622720425627, 'precision': 0.9130434782608695, 'recall': 0.7105263157894737, 'f1': 0.799154334038055}, 'config': {'seed': 42, 'device': 'cpu', 'data': {'path': '', 'appliance': 'kettle', 'window_size': 128, 'train_ratio': 0.7, 'val_ratio': 0.15, 'test_ratio': 0.15, 'max_samples_train': 30000, 'max_samples_val': 8000, 'max_samples_test': 30000, 'event_boost': {'threshold_w': 500.0, 'max_extra': 15000}}, 'model': {'input_dim': 1, 'd_model': 64, 'nhead': 4, 'num_layers': 2, 'dim_feedforward': 128, 'dropout': 0.0}, 'training': {'batch_size': 128, 'epochs': 20, 'lr': 0.0005, 'weight_decay': 0.0001, 'patience': 5, 'grad_clip': 1.0, 'loss': 'mse', 'lr_schedule': 'cosine', 'event_weight': 3.0, 'select_on': 'f1'}, 'metrics': {'on_threshold_watts': 500.0}}, 'n_train': 44935, 'n_val': 8000, 'n_test': 30000}
