@@ -1,0 +1,37 @@
+# F7 主候选: 事件覆盖靠每epoch重采样(45%窗口取自事件池,不静态复制防过拟合) + top4权重平均; 选点仍val MAE(F5教训:别叠加f1选点)
+seed: 42
+device: cpu
+data:
+  path: ''
+  appliance: kettle
+  window_size: 128
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  max_samples_train: 30000
+  max_samples_val: 8000
+  max_samples_test: 30000
+  event_boost:
+    threshold_w: 500.0
+    max_extra: 15000
+    stochastic_epochs: true
+    event_frac: 0.45
+model:
+  input_dim: 1
+  d_model: 64
+  nhead: 4
+  num_layers: 2
+  dim_feedforward: 128
+  dropout: 0.0
+training:
+  batch_size: 128
+  epochs: 20
+  lr: 0.0005
+  weight_decay: 0.0001
+  patience: 5
+  grad_clip: 1.0
+  loss: mse
+  lr_schedule: cosine
+  weight_avg: 4
+metrics:
+  on_threshold_watts: 500.0
