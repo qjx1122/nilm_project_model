@@ -26,7 +26,8 @@
 - F9（λ2×minprf 选点）**死路确认**：MAE 12.38 / P .919 / R .767（best_ep5 早早截停）——λ 系列全灭（2/3/8 三档均劣于 λ1）。
 - **F10 事故**：11:37 我并行跑的 TTA 扫描(≈1GB)+F10(d128,RSS1.48GB) 触发全局 OOM，F10 被内核击杀（只活到 ep5）。教训：**与 d128 泳道并行期间禁止任何第二进程**。F10(无jitter对照)暂不重跑——F11 结果决定是否需要。
 - TTA 复核（修正归一化后，roll=0 与保存预测 corr=1.000）：F8 的 28 个 FN 中 13/28 在 ±2 roll 下被同一模型检出（-3:13 / -2:12 / -1:8 / +1:3 / +2:5 / +3:6）——对齐敏感性真实存在；但推理侧 TTA mean±1 前沿仅 .896（原始 .895）、MAE 反升至 7.69 → **post-hoc TTA 死路**，正确做法=训练时 roll-jitter 增强（已实现 `data.roll_jitter`，pytest+冒烟过；顺带加了 `training.init_ckpt` 热启动，冒烟显示 F8 权重 warm-start 首 epoch val MAE 1.65）。
-- **F11（F10 全长配方 + roll_jitter=2）11:58 开跑**，timeout 8400s + 缺 result.json 自动兜底 eval_ckpt，ETA≈13:05。
+- **F11 身份更正（sed 事故，因祸得福）**：config 里 roll_jitter 实际未写入（F10 模板无该行，sed 空转）→ F11=**F10 全长对照的确定性复现**（ep4/5 与被杀 F10 逐位一致，顺带验证全管道可复现）。让其跑完（ETA≈14:0x）作为「无 jitter 满额版」定稿对照，产物将回填 tune_f10_biglong。
+- **F12 已排队**（轮询 PHASE11_DONE 自动开跑）：init_ckpt=F11 终权重热启动 + roll_jitter=2 续训 12ep（lr3e-4, wavg4, timeout 5400+兜底 eval），ETA≈15:0x。若 F11 已满额达标，F12 作为增益消融仍跑。
 - 判定计划：F11 完赛后 threshold_scan 全网格 → 若 max-min(P,R)>0.9 则定 F11 为新稳定版（REPORT.md §4 换锚），并复验 500W 协议点+MAE≤6W 进度；若仍 .89x，则从 F8/F11 权重 warm-start（init_ckpt）+更多 epoch 做 F12；同强模型间 max 集成最后再试（勿混 d64 弱模型——已证稀释）。
 
 ## 下一步（TODO）
