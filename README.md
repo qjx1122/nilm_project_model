@@ -2,7 +2,7 @@
 
 本项目面向 Windows + Conda + PyTorch，采用公开 UK-DALE 数据集构建一个可复现的 Transformer Encoder Seq2Point NILM 实验。
 
-> 重要：本项目不会伪造实验结果。当前执行环境没有 UK-DALE 原始/处理数据文件，因此本次只能完成代码、配置、文档和 CPU smoke test；真实 UK-DALE 指标必须在下载数据后运行 `run_real.ps1` 得到。
+> 重要：本项目不会伪造实验结果。仓库已内置处理好的真实数据 `data/ukdale_prepared.npz`（UK-DALE House1 kettle，6s，aggregate+target），真实指标直接跑 §6 即可复现；已产出第一组真实指标（缩短版，见 `reports/ukdale_baseline_cpu_short/` 与 `REPORT_TEST.md`），全量 baseline 仍待运行。合成 smoke test 仅用于验证代码链路。
 
 ## 1. 实验目标
 
@@ -64,6 +64,8 @@ conda activate transformer_nilm
 python scripts\inspect_h5.py --path D:\datasets\ukdale.h5
 ```
 
+**本仓库已内置处理数据**：`data/ukdale_prepared.npz`（键：`aggregate`、`target`，float32，n=10,344,744，≈718 天@6s；由 6 秒版 UK-DALE House1 kettle 生成）。使用该 npz 时无需再下载数据，`--data-path data/ukdale_prepared.npz` 直接训练。
+
 ## 3. Windows + Conda
 
 ```powershell
@@ -74,6 +76,14 @@ pip install -r requirements.txt
 
 GPU 用户请先按自己的 CUDA 版本安装对应 PyTorch，再安装其余依赖。
 
+### 3.1 Linux / CPU（无 conda 的沙箱环境）
+
+```bash
+python3 -m venv .venv
+./.venv/bin/pip install -r requirements.txt   # 若 PyTorch 官方 index 被网络拦截，直接走 PyPI 默认源亦可（CPU 可用）
+./.venv/bin/python -m pytest tests/ -q        # 环境自检
+```
+
 ## 4. 项目结构
 
 ```text
@@ -82,9 +92,16 @@ transformer_nilm_project/
 │   ├── baseline.yaml
 │   └── tuning.yaml
 ├── data/
+│   └── ukdale_prepared.npz      # 内置真实数据：aggregate+target（kettle, 6s, House1）
 ├── checkpoints/
 ├── logs/
 ├── reports/
+│   ├── smoke/                   # 合成数据冒烟产物（非真实结果）
+│   └── ukdale_baseline_cpu_short/  # 第一组真实指标（缩短版）
+├── STATUS.md                    # 续接文件（见 BOOTSTRAP.md）
+├── session/                     # 会话纪要（追加式）
+├── REPORT_TEST.md               # 专题报告（追加式）
+├── BOOTSTRAP.md                 # 会话与任务协议
 ├── src/
 │   ├── data.py
 │   ├── model.py
@@ -141,6 +158,14 @@ epochs: 30
 python scripts\train.py --config configs\baseline.yaml --data-path D:\datasets\ukdale.h5
 python scripts\evaluate.py --run-dir reports\baseline
 ```
+
+使用仓库内置真实数据（Linux/CPU 同理，路径换斜杠）：
+
+```bash
+./.venv/bin/python scripts/train.py --config configs/baseline.yaml --data-path data/ukdale_prepared.npz --out reports/baseline
+```
+
+CPU（2 核）参考耗时：全量配置 ≈ 80–90 分钟；缩短版（train 10k × 10 epochs）≈ 10.6 分钟，产物见 `reports/ukdale_baseline_cpu_short/`（result.json / history.json / best.pt / config.yaml / train.log，已入库）。
 
 ## 7. 调优
 

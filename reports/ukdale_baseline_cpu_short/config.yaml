@@ -1,0 +1,32 @@
+# 缩短版真实数据 baseline（Linux/CPU 沙箱，第一组真实 UK-DALE 指标）
+# 与 configs/baseline.yaml 的差异仅为控制 CPU 时长：
+#   max_samples_train 30000->10000, epochs 30->10, patience 7->4；其余口径完全一致
+seed: 42
+device: cpu
+data:
+  path: ""
+  appliance: kettle
+  window_size: 128
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+  max_samples_train: 10000
+  max_samples_val: 6000
+  max_samples_test: 6000
+model:
+  input_dim: 1
+  d_model: 64
+  nhead: 4
+  num_layers: 2
+  dim_feedforward: 128
+  dropout: 0.10
+training:
+  batch_size: 128
+  epochs: 10
+  lr: 0.0005
+  weight_decay: 0.0001
+  patience: 4
+  grad_clip: 1.0
+  loss: mse
+metrics:
+  on_threshold_watts: 500.0
