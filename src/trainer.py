@@ -7,19 +7,25 @@ from tqdm import tqdm
 from .metrics import regression_metrics
 
 
-def run_epoch(model, loader, device, optimizer=None, loss_name="mse", grad_clip=1.0):
+def run_epoch(model, loader, device, optimizer=None, loss_name="mse", grad_clip=1.0,
+              event_weight=1.0, on_thr_norm=None):
     train = optimizer is not None
     model.train(train)
     losses = []
     ys, ps = [], []
-    loss_fn = nn.MSELoss() if loss_name == "mse" else nn.L1Loss()
+    elem_fn = nn.MSELoss(reduction="none") if loss_name == "mse" else nn.L1Loss(reduction="none")
 
     for xb, yb in loader:
         xb, yb = xb.to(device), yb.to(device)
         if train:
             optimizer.zero_grad(set_to_none=True)
         pred = model(xb)
-        loss = loss_fn(pred, yb)
+        per = elem_fn(pred, yb)
+        if event_weight != 1.0 and on_thr_norm is not None:
+            w = 1.0 + (yb >= on_thr_norm).to(per.dtype) * (float(event_weight) - 1.0)
+            loss = (per * w).mean()
+        else:
+            loss = per.mean()
         if train:
             loss.backward()
             if grad_clip:
@@ -34,14 +40,19 @@ def run_epoch(model, loader, device, optimizer=None, loss_name="mse", grad_clip=
 
 def fit(model, train_loader, val_loader, device, optimizer, epochs, patience,
         y_mean, y_std, checkpoint, on_threshold=500.0, loss_name="mse",
-        grad_clip=1.0, scheduler=None):
+        grad_clip=1.0, scheduler=None, event_weight=1.0, select_on="mae"):
     best = float("inf")
-    best_epoch = 0
+    if select_on == "f1":
+        best = -float("inf")
     bad = 0
     history = []
+    on_thr_norm = None
+    if event_weight != 1.0 and y_std > 1e-9:
+        on_thr_norm = (float(on_threshold) - float(y_mean)) / float(y_std)
 
     for epoch in range(1, epochs + 1):
-        train_loss, yt, yp = run_epoch(model, train_loader, device, optimizer, loss_name, grad_clip)
+        train_loss, yt, yp = run_epoch(model, train_loader, device, optimizer, loss_name, grad_clip,
+                                       event_weight, on_thr_norm)
         val_loss, yv, pv = run_epoch(model, val_loader, device, None, loss_name, grad_clip)
 
         # Inverse normalization for human-readable metrics.
@@ -62,11 +73,14 @@ def fit(model, train_loader, val_loader, device, optimizer, epochs, patience,
         print(
             f"Epoch {epoch:03d} | "
             f"train MAE={tm['mae']:.2f} | val MAE={vm['mae']:.2f} | "
+            f"val F1={vm['f1']:.3f} | "
             f"train R2={tm['r2']:.4f} | val R2={vm['r2']:.4f}"
         )
 
-        if vm["mae"] < best:
-            best = vm["mae"]
+        key = vm["f1"] if select_on == "f1" else vm["mae"]
+        improved = key > best if select_on == "f1" else key < best
+        if improved:
+            best = key
             best_epoch = epoch
             bad = 0
             torch.save(model.state_dict(), checkpoint)

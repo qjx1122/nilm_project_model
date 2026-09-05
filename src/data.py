@@ -41,7 +41,7 @@ def make_synthetic_signal(n=12000, seed=42):
 
 
 def build_splits(aggregate, target, window, train_ratio=0.7, val_ratio=0.15,
-                 max_train=None, max_val=None, max_test=None):
+                 max_train=None, max_val=None, max_test=None, event_boost=None):
     n = len(aggregate)
     a = int(n * train_ratio)
     b = int(n * (train_ratio + val_ratio))
@@ -52,6 +52,20 @@ def build_splits(aggregate, target, window, train_ratio=0.7, val_ratio=0.15,
 
     if max_train and len(train_centers) > max_train:
         train_centers = np.linspace(train_centers[0], train_centers[-1], max_train).astype(np.int64)
+
+    # Event-stratified training sampling: after uniform subsampling, additionally include
+    # centers where the appliance is active (target >= threshold), so short events are not
+    # missed. Validation/test yardsticks are intentionally unaffected.
+    if event_boost:
+        thr = float(event_boost.get("threshold_w", 500.0))
+        max_extra = int(event_boost.get("max_extra", 10000))
+        lo, hi = window // 2, max(a - window // 2, window // 2 + 1)
+        active = np.nonzero(target[lo:hi] >= thr)[0] + lo
+        active = active[active >= window // 2]
+        if max_extra and len(active) > max_extra:
+            active = np.linspace(active[0], active[-1], max_extra).astype(np.int64)
+        if len(active):
+            train_centers = np.unique(np.concatenate([train_centers, active]))
     if max_val and len(val_centers) > max_val:
         val_centers = np.linspace(val_centers[0], val_centers[-1], max_val).astype(np.int64)
     if max_test and len(test_centers) > max_test:

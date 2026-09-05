@@ -38,7 +38,8 @@ def train_experiment(aggregate, target, cfg, out_dir):
         aggregate, target, window,
         dcfg["train_ratio"], dcfg["val_ratio"],
         dcfg.get("max_samples_train"), dcfg.get("max_samples_val"),
-        dcfg.get("max_samples_test")
+        dcfg.get("max_samples_test"),
+        event_boost=dcfg.get("event_boost"),
     )
     train_loader = DataLoader(train_ds, batch_size=tcfg["batch_size"], shuffle=True)
     val_loader = DataLoader(val_ds, batch_size=tcfg["batch_size"], shuffle=False)
@@ -60,7 +61,8 @@ def train_experiment(aggregate, target, cfg, out_dir):
         train_ds.y_mean, train_ds.y_std,
         out_dir / "best.pt",
         cfg["metrics"]["on_threshold_watts"],
-        tcfg["loss"], tcfg["grad_clip"], scheduler
+        tcfg["loss"], tcfg["grad_clip"], scheduler,
+        float(tcfg.get("event_weight", 1.0)), tcfg.get("select_on", "mae")
     )
 
     model.load_state_dict(torch.load(out_dir / "best.pt", map_location=device))
