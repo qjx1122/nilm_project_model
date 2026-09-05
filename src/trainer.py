@@ -34,7 +34,7 @@ def run_epoch(model, loader, device, optimizer=None, loss_name="mse", grad_clip=
 
 def fit(model, train_loader, val_loader, device, optimizer, epochs, patience,
         y_mean, y_std, checkpoint, on_threshold=500.0, loss_name="mse",
-        grad_clip=1.0):
+        grad_clip=1.0, scheduler=None):
     best = float("inf")
     best_epoch = 0
     bad = 0
@@ -55,6 +55,8 @@ def fit(model, train_loader, val_loader, device, optimizer, epochs, patience,
         row = {"epoch": epoch, "train_loss": train_loss, "val_loss": val_loss,
                **{f"train_{k}": v for k, v in tm.items()},
                **{f"val_{k}": v for k, v in vm.items()}}
+        if scheduler is not None:
+            row["lr"] = float(optimizer.param_groups[0]["lr"])
         history.append(row)
 
         print(
@@ -71,6 +73,11 @@ def fit(model, train_loader, val_loader, device, optimizer, epochs, patience,
         else:
             bad += 1
             if bad >= patience:
+                if scheduler is not None:
+                    scheduler.step()
                 break
+
+        if scheduler is not None:
+            scheduler.step()
 
     return history, best_epoch

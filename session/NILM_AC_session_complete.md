@@ -20,3 +20,11 @@
   - `src/__pycache__/*.pyc` 系上一 commit 误入库，建议 `git rm -r --cached` 清掉（待确认）。
   - `run_real.ps1` 未加仓库内数据默认路径（沙箱无法测试 PowerShell，留待确认）。
 - 相关文件/分支：分支 `arena/01a06f16-nilm-project-model`（自 `d0529cf`）；产物 `reports/ukdale_baseline_cpu_short/`；台账 `STATUS.md`、`REPORT_TEST.md`、`README.md`（§2/§3/§6/§7/§8）。
+
+## [2026-09-05] 会话纪要（续：调参专题）
+- 目标：基于第一组真实指标（MAE 13.62W / EE −21.5% / Rec 0.712）继续调优。
+- 完成项：13 次真实数据训练（总约 55 分钟 CPU）：Phase1 六泳道（l1 / win256 / d128 / lr1e-3 / layers4 / drop0）→ Phase2 组合（d0×1e-3 / d0×2e-3）→ 同尺度 A/B（10k/6k/6k）→ F2 全量（30k，稠密 test30000）→ F3=F2+cosine（胜出）。新增 `scripts/eval_ckpt.py`、opt-in `training.lr_schedule: cosine`（trainer 早停分支亦正确 step）。建立 `REPORT.md`：推荐稳定版本 `tune_final_f3_cosine`，稠密 test MAE 8.58W / R² 0.723 / F1 0.853 / EE −19.5%（对 anchor 同口径 −26.5%）。REPORT_TEST.md 追加调参专题全文。
+- 关键决策：组合结论须回锚点口径复核（Phase2 冠亚军在 10k A/B 下被否）；cosine 是本轮最大增益（平滑 val 震荡）；并行泳道降为顺序（torch cu130+seq256 OOM）；L1 loss 禁用（零膨胀坍缩）。
+- 未决问题：单 seed（建议 43/44 复验）；模型选择准则（val MAE vs F1）ablation；EE −19.5% 的能量损失补偿；seq256/更大容量在 GPU 机器复测；稠密 test 仍是 241 步子采样，未对齐 NILMbench 连续口径。
+- 相关文件/分支：`arena/01a06f16-nilm-project-model`；产物 `reports/tune_*`、`reports/ukdale_baseline_cpu_short/dense_test_eval.json`；文档 `REPORT.md`、`REPORT_TEST.md`、`README.md`、`STATUS.md`。
+- ⚠️ 推送阻塞：session 后半程 GH_TOKEN 失效，最后 6 个 commit 仅存本地（HEAD=727ffb4，远端=3fa28c7）；重连 GitHub 后 push 即可，无数据丢失风险。

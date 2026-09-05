@@ -1,0 +1,30 @@
+# 调参专题 Phase1 泳道 tune_lr1e3：公共口径同 ukdale_baseline_cpu_short 缩短版，单因子改动
+seed: 42
+device: cpu
+data:
+  path: ''
+  appliance: kettle
+  window_size: 128
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  max_samples_train: 8000
+  max_samples_val: 4000
+  max_samples_test: 4000
+model:
+  input_dim: 1
+  d_model: 64
+  nhead: 4
+  num_layers: 2
+  dim_feedforward: 128
+  dropout: 0.1
+training:
+  batch_size: 128
+  epochs: 12
+  lr: 0.001
+  weight_decay: 0.0001
+  patience: 4
+  grad_clip: 1.0
+  loss: mse
+metrics:
+  on_threshold_watts: 500.0

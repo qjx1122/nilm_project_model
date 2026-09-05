@@ -1,0 +1,30 @@
+# 调参 Phase3-F1b: anchor 同尺度只改 dropout 0.1->0（隔离单因子在 10k/6k/6k 协议下的效应）
+seed: 42
+device: cpu
+data:
+  path: ''
+  appliance: kettle
+  window_size: 128
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  max_samples_train: 10000
+  max_samples_val: 6000
+  max_samples_test: 6000
+model:
+  input_dim: 1
+  d_model: 64
+  nhead: 4
+  num_layers: 2
+  dim_feedforward: 128
+  dropout: 0.0
+training:
+  batch_size: 128
+  epochs: 10
+  lr: 0.0005
+  weight_decay: 0.0001
+  patience: 4
+  grad_clip: 1.0
+  loss: mse
+metrics:
+  on_threshold_watts: 500.0

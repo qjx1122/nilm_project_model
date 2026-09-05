@@ -48,6 +48,11 @@ def train_experiment(aggregate, target, cfg, out_dir):
     optimizer = torch.optim.AdamW(
         model.parameters(), lr=tcfg["lr"], weight_decay=tcfg["weight_decay"]
     )
+    scheduler = None
+    if tcfg.get("lr_schedule") == "cosine":
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=int(tcfg["epochs"])
+        )
     start = time.time()
     history, best_epoch = fit(
         model, train_loader, val_loader, device, optimizer,
@@ -55,7 +60,7 @@ def train_experiment(aggregate, target, cfg, out_dir):
         train_ds.y_mean, train_ds.y_std,
         out_dir / "best.pt",
         cfg["metrics"]["on_threshold_watts"],
-        tcfg["loss"], tcfg["grad_clip"]
+        tcfg["loss"], tcfg["grad_clip"], scheduler
     )
 
     model.load_state_dict(torch.load(out_dir / "best.pt", map_location=device))

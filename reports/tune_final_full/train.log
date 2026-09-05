@@ -1,0 +1,15 @@
+/home/user/nilm_project_model/src/model.py:48: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
+Epoch 001 | train MAE=17.13 | val MAE=10.62 | train R2=0.3796 | val R2=0.5753
+Epoch 002 | train MAE=8.84 | val MAE=9.78 | train R2=0.6683 | val R2=0.7238
+Epoch 003 | train MAE=7.90 | val MAE=6.45 | train R2=0.6816 | val R2=0.7841
+Epoch 004 | train MAE=7.66 | val MAE=10.99 | train R2=0.6646 | val R2=0.3908
+Epoch 005 | train MAE=6.62 | val MAE=6.10 | train R2=0.7006 | val R2=0.7805
+Epoch 006 | train MAE=6.49 | val MAE=5.53 | train R2=0.7018 | val R2=0.8148
+Epoch 007 | train MAE=5.59 | val MAE=4.93 | train R2=0.7517 | val R2=0.8053
+Epoch 008 | train MAE=5.97 | val MAE=6.10 | train R2=0.7225 | val R2=0.8175
+Epoch 009 | train MAE=5.27 | val MAE=6.52 | train R2=0.7327 | val R2=0.6350
+Epoch 010 | train MAE=5.57 | val MAE=11.67 | train R2=0.7370 | val R2=0.5268
+Epoch 011 | train MAE=6.48 | val MAE=5.93 | train R2=0.7357 | val R2=0.7499
+Epoch 012 | train MAE=5.74 | val MAE=5.13 | train R2=0.7486 | val R2=0.8285
+{'best_epoch': 7, 'device': 'cpu', 'runtime_sec': 911.8687536716461, 'test': {'mae': 10.591176738945643, 'rmse': 128.47866035653266, 'r2': 0.6517425806527534, 'sae': 0.2858889446536629, 'energy_error': -0.2858889446536629, 'precision': 0.9455445544554455, 'recall': 0.7180451127819549, 'f1': 0.8162393162393162}, 'config': {'seed': 42, 'device': 'cpu', 'data': {'path': '', 'appliance': 'kettle', 'window_size': 128, 'train_ratio': 0.7, 'val_ratio': 0.15, 'test_ratio': 0.15, 'max_samples_train': 30000, 'max_samples_val': 8000, 'max_samples_test': 30000}, 'model': {'input_dim': 1, 'd_model': 64, 'nhead': 4, 'num_layers': 2, 'dim_feedforward': 128, 'dropout': 0.0}, 'training': {'batch_size': 128, 'epochs': 20, 'lr': 0.0005, 'weight_decay': 0.0001, 'patience': 5, 'grad_clip': 1.0, 'loss': 'mse'}, 'metrics': {'on_threshold_watts': 500.0}}, 'n_train': 30000, 'n_val': 8000, 'n_test': 30000}

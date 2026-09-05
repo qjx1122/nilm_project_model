@@ -112,6 +112,7 @@ transformer_nilm_project/
 │   ├── inspect_h5.py
 │   ├── train.py
 │   ├── evaluate.py
+│   ├── eval_ckpt.py     # checkpoint 按原配置换口径复评（可加密 test 集做跨 run 公平对比）
 │   ├── tune.py
 │   └── run_smoke.py
 ├── tests/
@@ -145,8 +146,9 @@ d_model: 64
 nhead: 4
 num_layers: 2
 dim_feedforward: 128
-dropout: 0.1
+dropout: 0.1     # 真实数据 A/B 结论：kettle 上 dropout=0 更优（见 REPORT.md）
 lr: 0.0005
+lr_schedule: cosine   # 可选 none|cosine；cosine 可平滑 val 震荡、改善早停选点
 weight_decay: 0.0001
 batch_size: 128
 epochs: 30
@@ -166,6 +168,13 @@ python scripts\evaluate.py --run-dir reports\baseline
 ```
 
 CPU（2 核）参考耗时：全量配置 ≈ 80–90 分钟；缩短版（train 10k × 10 epochs）≈ 10.6 分钟，产物见 `reports/ukdale_baseline_cpu_short/`（result.json / history.json / best.pt / config.yaml / train.log，已入库）。
+
+已有 checkpoint 换口径复评（不重训；`--max-samples-test` 可加密测试集做跨 run 公平对比）：
+
+```bash
+./.venv/bin/python scripts/eval_ckpt.py --config reports/<run>/config.yaml --ckpt reports/<run>/best.pt \
+    --data-path data/ukdale_prepared.npz --max-samples-test 30000 --out reports/<run>/dense_test_eval.json
+```
 
 ## 7. 调优
 

@@ -1,0 +1,30 @@
+# 调参 Phase3-F2 头条验证: 最终胜出配置=anchor+dropout0(lr保持5e-4; 组合lr1e-3被同尺度A/B否决)，全量尺度 30k/8k/test30k稠密, 20ep/patience5
+seed: 42
+device: cpu
+data:
+  path: ''
+  appliance: kettle
+  window_size: 128
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  max_samples_train: 30000
+  max_samples_val: 8000
+  max_samples_test: 30000
+model:
+  input_dim: 1
+  d_model: 64
+  nhead: 4
+  num_layers: 2
+  dim_feedforward: 128
+  dropout: 0.0
+training:
+  batch_size: 128
+  epochs: 20
+  lr: 0.0005
+  weight_decay: 0.0001
+  patience: 5
+  grad_clip: 1.0
+  loss: mse
+metrics:
+  on_threshold_watts: 500.0

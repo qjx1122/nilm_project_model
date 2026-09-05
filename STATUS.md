@@ -1,8 +1,9 @@
 # STATUS.md
 
 ## 当前目标
-- [x] 已完成（2026-09-05 本 session）：缩短版真实数据 baseline —— UK-DALE kettle，train 10000 窗口 × 10 epochs，CPU，结果目录 `reports/ukdale_baseline_cpu_short/` 已整体入库。
-- [ ] 下一任务（待用户确认优先级）：全量 baseline（`configs/baseline.yaml`，30k 窗口 × 30 epochs，CPU 预计 ~85 分钟）→ 若指标稳定，写入 `REPORT.md` 作为首个「真实数据稳定结论」。
+- [x] 已完成（2026-09-05 调参专题）：坐标平行搜索 6 泳道 → 组合验证 → 同尺度 A/B → 全量稠密验证（test 30000）。最终胜出 `tune_final_f3_cosine`（dropout=0 + cosine lr，其余=baseline）：MAE 8.58W / R² 0.723 / F1 0.853（对 anchor 同口径 −26.5%）。已写入 REPORT.md「推荐稳定版本」。
+- [x] 已完成（2026-09-05 上一任务）：缩短版真实数据 baseline —— test MAE=13.62W / R²=0.634 / F1=0.808，结果已入库。
+
 
 ## 已完成
 - [x] 开局仪式：git 核对（分支 `arena/01a06f16-nilm-project-model`，与 origin 同步）、按模板创建 STATUS.md
@@ -11,18 +12,27 @@
 - [x] 真实数据 2-epoch 冒烟（管道验证，产物在 /tmp，未入库）
 - [x] **缩短版真实数据 baseline**：best_epoch=9，test MAE=13.62W / RMSE=137.95W / R²=0.634 / SAE=0.215 / energy_error=-0.215 / P=0.933 / R=0.712 / F1=0.808（val 最优 MAE=5.71W）；runtime 635.6s
 - [x] 专题报告追加至 `REPORT_TEST.md`；会话纪要落盘 `session/NILM_AC_session_complete.md`；README 按条件触发更新；新增 `.gitignore`
+- [x] **调参专题全流程**（13 次真实数据训练，累计约 55 分钟 GPU 时当）：Phase1 六泳道 → Phase2 组合 → 同尺度 A/B → F2 全量 → F3+cosine 胜出；新增 `scripts/eval_ckpt.py` 与 opt-in `lr_schedule: cosine`；`REPORT.md` 建立（算法路线/KPI 口径/稳定结论/推荐版本）；README 同步；`__pycache__` 出库
 
 ## 进行中
-- （无——本 session 任务闭环，等待用户定下一优先级）
+- （无——调参专题闭环，等待用户定下一优先级）
+- ⚠️ **阻塞**：本 session 后半程 GH_TOKEN 过期（开局时有效），最后 6 个 commit（4b99dad…727ffb4）未推送到远端；远端停在 3fa28c7。本地全部已 commit、工作区干净，无丢失风险；用户在 Arena 重连 GitHub 后执行 `git push origin arena/01a06f16-nilm-project-model` 即可（下次开局仪式第 3 步会再核验）。
 
 ## 下一步（TODO）
-1. 全量 baseline（30k 窗口 × 30 epochs，CPU ~85min）：`OMP_NUM_THREADS=2 ./.venv/bin/python scripts/train.py --config configs/baseline.yaml --data-path data/ukdale_prepared.npz --out reports/ukdale_baseline_cpu_full`
-2. 指标显著优于/劣于缩短版时，分析采样密度差异（linspace 子采样 vs 连续窗口）；稳定后把结论写进 `REPORT.md`
-3. 清理仓库遗留：`src/__pycache__/*.pyc`（上一 commit 误入库的 Windows 编译缓存）建议 `git rm -r --cached` 移除，`.gitignore` 已就位
-4. （可选）`scripts/tune.py` 真实数据小规模调参试点（CPU 预算允许时）；`run_real.ps1` 可加默认路径 `data/ukdale_prepared.npz`（本环境无法测 PowerShell，留给用户或下次确认）
-5. （可选）Test 集当前是 718 天中后 15% 一段的 linspace 子采样，建议正式版补一份「连续覆盖 + 按事件对齐」的评测口径，对齐 NILMbench 可比性
+1. **多 seed 复验**：F3/drop0 结论差距多在 0.3–1.5W val MAE 量级、单 seed=42；对 `tune_final_f3_cosine` 用 seed 43/44 复验后再扩大结论
+2. 选点准则 ablation：val MAE 最优 vs val F1 最优 vs 多目标（F2 教训的延伸；F3 中 ep10 F1=0.897 vs ep12 MAE=4.12 不同最优点）
+3. 能量低估遗留：EE −19.5% → 试预测头正偏置先验 / 事件加权损失 / soft-label ON 判定
+4. `window_size=256` 在大内存或 GPU 机器重测（本沙箱 torch cu130+seq256 内存线性增长至 OOM，见踩坑）
+5. 评测口径升级：连续覆盖 + 按事件对齐（对齐 NILMbench 可比性）；`run_real.ps1` 可补默认路径 `data/ukdale_prepared.npz`（沙箱无法测 PowerShell）
 
 ## 决策记录 / 踩坑
+- [2026-09-05 调参] **组合不必然=单因子之和**：drop0+lr1e-3 在 Phase2 小口径（8k train, 4k val）最优，但在与 anchor 同尺度 A/B（10k/6k/6k, 10ep）下 R²/EE 反而劣于 drop0-only，故最终配置回到 baseline lr=5e-4。**换更大训练预算时须重跑同尺度 A/B 复核**，小口径排序不能直接外推。
+- [2026-09-05 调参] **cosine 调度是本轮最大增益来源**：F2（固定 lr）val MAE 剧烈震荡（4.9↔11.7），早停在 ep7 选点纯看运气；F3 加 cosine 后后半场稳定收敛于 4.1–5.6，稠密 test MAE 10.59→8.58（−19%）。给 trainer/experiment 加了 opt-in `lr_schedule: cosine`（默认不变，早停分支也 step）。
+- [2026-09-05 调参] **模型选择本身是高影响元超参**：F2 的 best_ep7 checkpoint 在稠密 test 上 EE −28.6%，而 val 曲线 ep12 明显更优——val MAE 单调最小选点在噪声下失效。候选：val F1 / 多目标选点（TODO 2）。
+- [2026-09-05 调参] **L1 loss 否决**：`tune_l1loss` val MAE 10.83、test R²=-0.009、energy_error=-96%——零膨胀稀疏目标下 L1 使模型坍缩到条件中位数(≈0)。调优保持 MSE。（history 在 `reports/tune_l1loss/`）
+- [2026-09-05 调参] **window_size=256 泳道暂缓（本机内存异常）**：seq256+d64 泳道被全局 OOM 杀死；300 步内存二分显示 ~18MB/步 线性增长（seq128 锚点同环境跑 10 epochs 无恙）。torch 2.14.0+cu130 单 import 即 505MB，seq256 单 lane 峰值 2.18GB（MALLOC_ARENA_MAX=2 无效）。aliyun/pku/nju/bfsu 镜像均 TLS 拦截，无法换 CPU 轮子。结论：本环境只跑 seq128；256 窗口留到有 GPU/大内存机器。
+- [2026-09-05 调参] **并行度=1**：两泳道并行时内存余量 <800MB 导致吞吐骤降（epoch 从 ~64s 恶化到 156-390s），改为顺序单泳道（OMP=2 吃满双核）。
+- [2026-09-05 调参] `pkill -f <pattern>` 在 bash 工具里会匹配到自身命令行（含同样字面量）导致自杀，×2 次踩中；清进程一律先 `ps` 定位 PID 再精确 kill。
 - [2026-09-05] 沙箱为 Linux + 2 核 CPU + 3GB 内存：README 的 `conda`/`.ps1` 流程不适用，改用 `python3 -m venv .venv` + `pip`（`.venv` 已加 `.gitignore`，避免 `git add -A` 误收 3.5GB 依赖）。
 - [2026-09-05] `download.pytorch.org` 在本沙箱 TLS 被拦截 → 改 PyPI 默认源装 torch 2.14.0+cu130；**其 import 依赖 nvidia-* 动态库，不可卸载精简**（删了会 ImportError，需按 pin 版本逐个装回）。
 - [2026-09-05] python 非 tty 时 stdout 块缓冲，`tee` 看不到实时 epoch 日志；用 `best.pt` 的 mtime 当进度心跳可观察训练推进。
@@ -32,6 +42,9 @@
 
 ## 关键文件路径
 - 数据：`data/ukdale_prepared.npz`（aggregate+target，kettle，6s）
+- **推荐稳定版本**：`reports/tune_final_f3_cosine/`（config/result/history/best.pt）；结论见 `REPORT.md` §4
+- 调参过程产物：`reports/tune_{l1loss,lr1e3,layers4,drop0,d128,c_d0lr1e3,c_d0lr2e3}/`、A/B：`reports/tune_final_ab10k{,_drop0only}/`、全量对照：`reports/tune_final_full/`；anchor 稠密复评：`reports/ukdale_baseline_cpu_short/dense_test_eval.json`
+- 复评工具：`scripts/eval_ckpt.py`（checkpoint 换稠密口径复评，跨 run 公平对比）
 - 本次实验产物：`reports/ukdale_baseline_cpu_short/`（config.yaml / train.log / history.json / result.json / best.pt，已入库）
 - 全量配置（下一步用）：`configs/baseline.yaml`；调参搜索：`configs/tuning.yaml`
 - 训练入口：`scripts/train.py`；查看结果：`scripts/evaluate.py --run-dir reports/ukdale_baseline_cpu_short`
