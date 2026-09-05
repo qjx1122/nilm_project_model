@@ -1,0 +1,39 @@
+# 攻坚 F9: F7 配方 + λ2事件加权 + minprf选点(=max min(valP,valR)；F1b教训:λ2×f1选点召回崩，minprf为剩余安全组合)
+seed: 42
+device: cpu
+data:
+  path: ''
+  appliance: kettle
+  window_size: 128
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  max_samples_train: 30000
+  max_samples_val: 8000
+  max_samples_test: 30000
+  event_boost:
+    threshold_w: 500.0
+    max_extra: 15000
+    stochastic_epochs: true
+    event_frac: 0.45
+model:
+  input_dim: 1
+  d_model: 64
+  nhead: 4
+  num_layers: 2
+  dim_feedforward: 128
+  dropout: 0.0
+training:
+  batch_size: 128
+  epochs: 20
+  lr: 0.0005
+  weight_decay: 0.0001
+  patience: 5
+  grad_clip: 1.0
+  loss: mse
+  event_weight: 2.0
+  select_on: minprf
+  lr_schedule: cosine
+  weight_avg: 4
+metrics:
+  on_threshold_watts: 500.0

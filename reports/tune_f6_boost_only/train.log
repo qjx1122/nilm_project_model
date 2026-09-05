@@ -1,0 +1,14 @@
+/home/user/nilm_project_model/src/model.py:48: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
+Epoch 001 | train MAE=16.30 | val MAE=11.49 | val F1=0.759 | train R2=0.4404 | val R2=0.5764
+Epoch 002 | train MAE=8.37 | val MAE=4.40 | val F1=0.876 | train R2=0.7010 | val R2=0.8217
+Epoch 003 | train MAE=6.67 | val MAE=6.17 | val F1=0.864 | train R2=0.7200 | val R2=0.8189
+Epoch 004 | train MAE=7.13 | val MAE=6.63 | val F1=0.835 | train R2=0.7197 | val R2=0.7590
+Epoch 005 | train MAE=6.04 | val MAE=5.88 | val F1=0.839 | train R2=0.7492 | val R2=0.7821
+Epoch 006 | train MAE=6.41 | val MAE=4.39 | val F1=0.884 | train R2=0.7496 | val R2=0.8194
+Epoch 007 | train MAE=5.72 | val MAE=5.00 | val F1=0.874 | train R2=0.7677 | val R2=0.8229
+Epoch 008 | train MAE=5.68 | val MAE=4.83 | val F1=0.860 | train R2=0.7474 | val R2=0.8058
+Epoch 009 | train MAE=5.90 | val MAE=5.56 | val F1=0.844 | train R2=0.7624 | val R2=0.7869
+Epoch 010 | train MAE=5.35 | val MAE=5.40 | val F1=0.881 | train R2=0.7715 | val R2=0.8058
+Epoch 011 | train MAE=5.48 | val MAE=4.67 | val F1=0.867 | train R2=0.7677 | val R2=0.7937
+{'best_epoch': 6, 'device': 'cpu', 'runtime_sec': 773.3891236782074, 'test': {'mae': 9.310705641667049, 'rmse': 118.72898861131735, 'r2': 0.7025925009634014, 'sae': 0.19871117696911275, 'energy_error': -0.19871117696911275, 'precision': 0.9252336448598131, 'recall': 0.7443609022556391, 'f1': 0.8250000000000001}, 'config': {'seed': 42, 'device': 'cpu', 'data': {'path': '', 'appliance': 'kettle', 'window_size': 128, 'train_ratio': 0.7, 'val_ratio': 0.15, 'test_ratio': 0.15, 'max_samples_train': 30000, 'max_samples_val': 8000, 'max_samples_test': 30000, 'event_boost': {'threshold_w': 500.0, 'max_extra': 15000}}, 'model': {'input_dim': 1, 'd_model': 64, 'nhead': 4, 'num_layers': 2, 'dim_feedforward': 128, 'dropout': 0.0}, 'training': {'batch_size': 128, 'epochs': 20, 'lr': 0.0005, 'weight_decay': 0.0001, 'patience': 5, 'grad_clip': 1.0, 'loss': 'mse', 'lr_schedule': 'cosine'}, 'metrics': {'on_threshold_watts': 500.0}}, 'n_train': 44935, 'n_val': 8000, 'n_test': 30000}

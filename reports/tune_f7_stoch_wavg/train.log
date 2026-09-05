@@ -1,0 +1,15 @@
+/home/user/nilm_project_model/src/model.py:48: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
+Epoch 001 | train MAE=19.90 | val MAE=11.94 | val F1=0.841 | train R2=0.3120 | val R2=0.6172
+Epoch 002 | train MAE=9.89 | val MAE=6.26 | val F1=0.864 | train R2=0.6908 | val R2=0.8089
+Epoch 003 | train MAE=6.10 | val MAE=6.01 | val F1=0.897 | train R2=0.7722 | val R2=0.8221
+Epoch 004 | train MAE=7.22 | val MAE=6.66 | val F1=0.809 | train R2=0.7449 | val R2=0.7316
+Epoch 005 | train MAE=7.49 | val MAE=10.04 | val F1=0.817 | train R2=0.7268 | val R2=0.6753
+Epoch 006 | train MAE=4.95 | val MAE=4.20 | val F1=0.884 | train R2=0.8281 | val R2=0.8258
+Epoch 007 | train MAE=6.39 | val MAE=6.72 | val F1=0.884 | train R2=0.7993 | val R2=0.8048
+Epoch 008 | train MAE=7.09 | val MAE=6.33 | val F1=0.854 | train R2=0.7478 | val R2=0.7859
+Epoch 009 | train MAE=5.47 | val MAE=4.86 | val F1=0.881 | train R2=0.8116 | val R2=0.8124
+Epoch 010 | train MAE=4.43 | val MAE=5.06 | val F1=0.894 | train R2=0.8350 | val R2=0.8145
+Epoch 011 | train MAE=4.84 | val MAE=5.20 | val F1=0.881 | train R2=0.8364 | val R2=0.8042
+Weight-averaged checkpoint over epochs [6, 9, 10, 11] (top-4 by selection key)
+{'best_epoch': 6, 'device': 'cpu', 'runtime_sec': 504.1585352420807, 'test': {'mae': 8.980521916659674, 'rmse': 117.46027011358727, 'r2': 0.7089146363710399, 'sae': 0.17484822693099433, 'energy_error': -0.17484822693099433, 'precision': 0.9512195121951219, 'recall': 0.7330827067669173, 'f1': 0.8280254777070063}, 'config': {'seed': 42, 'device': 'cpu', 'data': {'path': '', 'appliance': 'kettle', 'window_size': 128, 'train_ratio': 0.7, 'val_ratio': 0.15, 'test_ratio': 0.15, 'max_samples_train': 30000, 'max_samples_val': 8000, 'max_samples_test': 30000, 'event_boost': {'threshold_w': 500.0, 'max_extra': 15000, 'stochastic_epochs': True, 'event_frac': 0.45}}, 'model': {'input_dim': 1, 'd_model': 64, 'nhead': 4, 'num_layers': 2, 'dim_feedforward': 128, 'dropout': 0.0}, 'training': {'batch_size': 128, 'epochs': 20, 'lr': 0.0005, 'weight_decay': 0.0001, 'patience': 5, 'grad_clip': 1.0, 'loss': 'mse', 'lr_schedule': 'cosine', 'weight_avg': 4}, 'metrics': {'on_threshold_watts': 500.0}}, 'n_train': 30000, 'n_val': 8000, 'n_test': 30000}
