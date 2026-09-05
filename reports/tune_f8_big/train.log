@@ -2,3 +2,24 @@
   self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
 Epoch 001 | train MAE=16.40 | val MAE=5.24 | val F1=0.876 | train R2=0.3999 | val R2=0.8162
 Epoch 002 | train MAE=12.84 | val MAE=6.41 | val F1=0.857 | train R2=0.6498 | val R2=0.7838
+Epoch 003 | train MAE=7.71 | val MAE=7.40 | val F1=0.821 | train R2=0.7418 | val R2=0.7348
+Epoch 004 | train MAE=10.47 | val MAE=4.55 | val F1=0.894 | train R2=0.6583 | val R2=0.8251
+Epoch 005 | train MAE=9.52 | val MAE=5.58 | val F1=0.892 | train R2=0.6927 | val R2=0.8086
+Epoch 006 | train MAE=6.85 | val MAE=5.07 | val F1=0.874 | train R2=0.7678 | val R2=0.8048
+Epoch 007 | train MAE=7.82 | val MAE=6.31 | val F1=0.894 | train R2=0.7628 | val R2=0.8062
+Epoch 008 | train MAE=8.71 | val MAE=7.57 | val F1=0.874 | train R2=0.6807 | val R2=0.8073
+Epoch 009 | train MAE=6.74 | val MAE=7.23 | val F1=0.835 | train R2=0.7738 | val R2=0.7331
+Epoch 010 | train MAE=6.39 | val MAE=5.11 | val F1=0.894 | train R2=0.7470 | val R2=0.8200
+Epoch 011 | train MAE=6.41 | val MAE=4.01 | val F1=0.884 | train R2=0.7928 | val R2=0.8163
+Epoch 012 | train MAE=5.17 | val MAE=4.17 | val F1=0.894 | train R2=0.8044 | val R2=0.8296
+Epoch 013 | train MAE=5.71 | val MAE=5.00 | val F1=0.854 | train R2=0.8189 | val R2=0.7675
+Epoch 014 | train MAE=5.26 | val MAE=4.45 | val F1=0.874 | train R2=0.8175 | val R2=0.8023
+Epoch 015 | train MAE=4.42 | val MAE=6.57 | val F1=0.864 | train R2=0.8236 | val R2=0.7896
+Epoch 016 | train MAE=4.87 | val MAE=3.90 | val F1=0.884 | train R2=0.8284 | val R2=0.8216
+Epoch 017 | train MAE=4.12 | val MAE=4.92 | val F1=0.854 | train R2=0.8287 | val R2=0.7649
+Epoch 018 | train MAE=3.30 | val MAE=4.44 | val F1=0.874 | train R2=0.8584 | val R2=0.8063
+Epoch 019 | train MAE=4.31 | val MAE=4.21 | val F1=0.892 | train R2=0.8090 | val R2=0.8326
+Epoch 020 | train MAE=4.46 | val MAE=3.66 | val F1=0.892 | train R2=0.8043 | val R2=0.8363
+Epoch 021 | train MAE=3.57 | val MAE=3.42 | val F1=0.892 | train R2=0.8181 | val R2=0.8254
+Epoch 022 | train MAE=2.94 | val MAE=3.57 | val F1=0.892 | train R2=0.8710 | val R2=0.8244
+Epoch 023 | train MAE=3.05 | val MAE=4.18 | val F1=0.892 | train R2=0.8616 | val R2=0.8312

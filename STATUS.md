@@ -22,7 +22,9 @@
 - [x] **调参专题全流程**（13 次真实数据训练，累计约 55 分钟 GPU 时当）：Phase1 六泳道 → Phase2 组合 → 同尺度 A/B → F2 全量 → F3+cosine 胜出；新增 `scripts/eval_ckpt.py` 与 opt-in `lr_schedule: cosine`；`REPORT.md` 建立（算法路线/KPI 口径/稳定结论/推荐版本）；README 同步；`__pycache__` 出库
 
 ## 进行中
-- （无——调参专题闭环 + 推送已补完，等待用户定下一优先级）
+- **F8(容量 d128/4L+stochastic+wavg4)已证实为最强配方**：稠密 test MAE **7.37W**（新王，前最佳 F3 8.58）/ R² .725 / 协议点 P .952 R .744；前沿 t=55 **max-min(P,R)=.895**（P.895/R.895，TP238/266）——距双 0.9 仅差 ~2 TP 的样本量！被 timeout(4800s) 截死于 ep23（ep22 val MAE 3.57 仍在改善、wavg 未及执行），**决定重跑全长版 F10**（epochs=30, timeout≥9600s, 完整 wavg）。
+- F9（F7 配方 + λ2 + minprf 选点）在跑（11:09 起，ETA≈11:4x）。
+- 若 F10 前沿 max-min≥0.9：以 val minprf（或 MAE）定选点、500W 协议点复评并定稿；若仍差最后一口气：尝试 3-seed F8 型集成（max 仅在同强模型间用，勿混 d64 弱模型——已证稀释）。
 
 ## 下一步（TODO）
 1. **多 seed 复验**：F3/drop0 结论差距多在 0.3–1.5W val MAE 量级、单 seed=42；对 `tune_final_f3_cosine` 用 seed 43/44 复验后再扩大结论
