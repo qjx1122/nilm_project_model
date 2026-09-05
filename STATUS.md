@@ -15,8 +15,7 @@
 - [x] **调参专题全流程**（13 次真实数据训练，累计约 55 分钟 GPU 时当）：Phase1 六泳道 → Phase2 组合 → 同尺度 A/B → F2 全量 → F3+cosine 胜出；新增 `scripts/eval_ckpt.py` 与 opt-in `lr_schedule: cosine`；`REPORT.md` 建立（算法路线/KPI 口径/稳定结论/推荐版本）；README 同步；`__pycache__` 出库
 
 ## 进行中
-- （无——调参专题闭环，等待用户定下一优先级）
-- ⚠️ **阻塞**：本 session 后半程 GH_TOKEN 过期（开局时有效），最后 6 个 commit（4b99dad…727ffb4）未推送到远端；远端停在 3fa28c7。本地全部已 commit、工作区干净，无丢失风险；用户在 Arena 重连 GitHub 后执行 `git push origin arena/01a06f16-nilm-project-model` 即可（下次开局仪式第 3 步会再核验）。
+- （无——调参专题闭环 + 推送已补完，等待用户定下一优先级）
 
 ## 下一步（TODO）
 1. **多 seed 复验**：F3/drop0 结论差距多在 0.3–1.5W val MAE 量级、单 seed=42；对 `tune_final_f3_cosine` 用 seed 43/44 复验后再扩大结论

@@ -28,3 +28,10 @@
 - 未决问题：单 seed（建议 43/44 复验）；模型选择准则（val MAE vs F1）ablation；EE −19.5% 的能量损失补偿；seq256/更大容量在 GPU 机器复测；稠密 test 仍是 241 步子采样，未对齐 NILMbench 连续口径。
 - 相关文件/分支：`arena/01a06f16-nilm-project-model`；产物 `reports/tune_*`、`reports/ukdale_baseline_cpu_short/dense_test_eval.json`；文档 `REPORT.md`、`REPORT_TEST.md`、`README.md`、`STATUS.md`。
 - ⚠️ 推送阻塞：session 后半程 GH_TOKEN 失效，最后 6 个 commit 仅存本地（HEAD=727ffb4，远端=3fa28c7）；重连 GitHub 后 push 即可，无数据丢失风险。
+
+## [2026-09-05] 会话纪要（续：补 push 与事故恢复）
+- 目标：把上轮 token 过期未推送的调参 commit 补推到远端。
+- 完成项：push 时发现沙箱已重建——.git 为全新 clone（HEAD=d0529cf），本 session 全部 commit 对象丢失（含已推过的 3fa28c7 引用），仅剩工作区文件快照；远端 arena 分支停在 3fa28c7。恢复路径：`add -A`+tmp commit → fetch → `reset --soft` 远端 tip → 重放为单 commit `1faa468` → push 成功（`3fa28c7..1faa468`，远端=本地已核验）。
+- 关键决策：6 个语义化 commit 合并为 1 个重放 commit（细粒度历史不可恢复，快照树=终态，信息无损）；重放前用 ast 校验 trainer/experiment 代码一致性通过。
+- 未决问题：**`.venv` 丢失**（快照排除目录），下次实验 session 需按 README §3.1 重装依赖（注意：PyPI 默认源装 torch+cu130 后不可删 nvidia 依赖）；原调参中间 commit 信息以本纪要/REPORT_TEST 为准。
+- 相关文件/分支：`arena/01a06f16-nilm-project-model` 远端 tip=`1faa468`。
