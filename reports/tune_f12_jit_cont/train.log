@@ -1,0 +1,16 @@
+/home/user/nilm_project_model/src/model.py:48: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
+Epoch 001 | train MAE=8.16 | val MAE=5.30 | val F1=0.894 | train R2=0.6283 | val R2=0.8369
+Epoch 002 | train MAE=6.57 | val MAE=5.20 | val F1=0.894 | train R2=0.7125 | val R2=0.8357
+Epoch 003 | train MAE=6.80 | val MAE=5.97 | val F1=0.867 | train R2=0.7255 | val R2=0.7767
+Epoch 004 | train MAE=7.21 | val MAE=2.98 | val F1=0.905 | train R2=0.7017 | val R2=0.8526
+Epoch 005 | train MAE=6.97 | val MAE=5.10 | val F1=0.835 | train R2=0.7018 | val R2=0.7263
+Epoch 006 | train MAE=4.97 | val MAE=5.95 | val F1=0.905 | train R2=0.8132 | val R2=0.8458
+Epoch 007 | train MAE=6.44 | val MAE=5.17 | val F1=0.878 | train R2=0.7445 | val R2=0.8006
+Epoch 008 | train MAE=6.15 | val MAE=3.66 | val F1=0.894 | train R2=0.7449 | val R2=0.8365
+Epoch 009 | train MAE=5.33 | val MAE=6.69 | val F1=0.867 | train R2=0.7605 | val R2=0.7772
+Epoch 010 | train MAE=4.35 | val MAE=3.63 | val F1=0.905 | train R2=0.7593 | val R2=0.8558
+Epoch 011 | train MAE=5.41 | val MAE=3.42 | val F1=0.905 | train R2=0.7345 | val R2=0.8475
+Epoch 012 | train MAE=3.31 | val MAE=3.21 | val F1=0.905 | train R2=0.8464 | val R2=0.8488
+Weight-averaged checkpoint over epochs [4, 10, 11, 12] (top-4 by selection key)
+{'best_epoch': 4, 'device': 'cpu', 'runtime_sec': 2902.363003015518, 'test': {'mae': 7.62570791978836, 'rmse': 104.80413325206611, 'r2': 0.7682630964807259, 'sae': 0.2054195945734441, 'energy_error': -0.2054195945734441, 'precision': 0.9541284403669725, 'recall': 0.7819548872180451, 'f1': 0.859504132231405}, 'config': {'seed': 42, 'device': 'cpu', 'data': {'path': '', 'appliance': 'kettle', 'window_size': 128, 'train_ratio': 0.7, 'val_ratio': 0.15, 'test_ratio': 0.15, 'max_samples_train': 30000, 'max_samples_val': 8000, 'max_samples_test': 30000, 'event_boost': {'threshold_w': 500.0, 'max_extra': 15000, 'stochastic_epochs': True, 'event_frac': 0.45}, 'roll_jitter': 2}, 'model': {'input_dim': 1, 'd_model': 128, 'nhead': 8, 'num_layers': 4, 'dim_feedforward': 256, 'dropout': 0.0}, 'training': {'batch_size': 64, 'epochs': 12, 'lr': 0.0003, 'weight_decay': 0.0001, 'patience': 12, 'grad_clip': 1.0, 'loss': 'mse', 'lr_schedule': 'cosine', 'weight_avg': 4, 'init_ckpt': 'reports/tune_f11_big_jit/best.pt'}, 'metrics': {'on_threshold_watts': 500.0}}, 'n_train': 30000, 'n_val': 8000, 'n_test': 30000}

@@ -1,4 +1,4 @@
-# 攻坚 F10: F8 全长版——30ep/patience10 防再被截杀，wavg 完整执行，其余与 F8 相同
+# 攻坚 F11: F10 全长版 + roll_jitter=2（诊断:13/28 FN 在±2 roll 下可检出=模型过拟合精确对齐）
 seed: 42
 device: cpu
 data:

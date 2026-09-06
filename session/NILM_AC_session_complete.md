@@ -35,3 +35,11 @@
 - 关键决策：6 个语义化 commit 合并为 1 个重放 commit（细粒度历史不可恢复，快照树=终态，信息无损）；重放前用 ast 校验 trainer/experiment 代码一致性通过。
 - 未决问题：**`.venv` 丢失**（快照排除目录），下次实验 session 需按 README §3.1 重装依赖（注意：PyPI 默认源装 torch+cu130 后不可删 nvidia 依赖）；原调参中间 commit 信息以本纪要/REPORT_TEST 为准。
 - 相关文件/分支：`arena/01a06f16-nilm-project-model` 远端 tip=`1faa468`。
+
+## [2026-09-05] 会话纪要（P/R 双 0.9 攻坚 · F4–F13 全泳道）
+- 目标：稠密 test30000 上 P>0.9 且 R>0.9（500W 判定）；MAE 0.2W 经用户确认不可达→重设为尽量压低（承诺 ≤6W，P/R 优化不得劣化 MAE）。
+- 完成项：F4(ew3/ew8)/F5/F6/F9 四路证伪（λ 加权与静态 boost 全死路）；F7 确立 stochastic+wavg 配方；F8 证明容量收益（被 timeout 截停，checkpoint 快照抢救）；F10(=F11 确定性复现) 全长完赛成**新稳定版本**：MAE 6.68W（−22% vs F3）/R² .770/EE −10.0%/P .938/R .797/F1 .862；median4 集成（f8,f10,f12,f13）val 选点 t*=115 → test .907/.880、test 侧 t=95 处 .906/.906（诊断）。新能力入库：`stochastic_epochs/event_frac`、`weight_avg`、`select_on:f1|minprf`、`roll_jitter`、`init_ckpt`（全 opt-in）。噪声地板定量：FP 76% 为子电表丢数（剔噪 P→.976）、FN ~29% 聚合无痕迹、FN 跨模型重合 98%——**双 0.9 在 500W 点级协议被标签噪声锁定**。REPORT.md §3/§4 定稿；REPORT_TEST.md 追加攻坚专题全表。
+- 关键决策：F11 身份更正为「F10 全长对照」（sed 失配事故因祸得福，验证管道确定性）；F12 jitter 定性双刃、不进稳定版；post-hoc TTA/跨族集成/λ 系列判死勿再试；产物 canonical 收敛到 reports/tune_f10_biglong/。
+- 未决问题：seed44 复验；val 加密（30k）用于决策层选点；jitter 全长单变量对照；500W 双 0.9 若为硬验收需与用户重议口径（决策阈值 95-115W 或事件级 P/R），依据已备好。
+- 相关文件/分支：`arena/01a06f16-nilm-project-model`；产物 `reports/tune_f4_* … tune_f13_seed43`；诊断件 `/tmp/*_preds.npz`、`/tmp/val_gate.py`；文档 `REPORT.md` §3.5-3.8/§4、`REPORT_TEST.md` 末节、`STATUS.md`。
+- 事故记录：沙箱全程未重建但 turn 间长 sleep 轮询易被杀（以后台进程+result.json 为准）；d128 泳道期间并行第二进程触发全局 OOM 误杀 F10（教训入 REPORT.md §5）；GitHub 令牌短时效，push 需择机重试。

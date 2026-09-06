@@ -5,3 +5,24 @@ Epoch 002 | train MAE=8.57 | val MAE=6.03 | val F1=0.839 | train R2=0.7275 | val
 Epoch 003 | train MAE=7.84 | val MAE=8.99 | val F1=0.857 | train R2=0.7372 | val R2=0.7324
 Epoch 004 | train MAE=13.00 | val MAE=7.83 | val F1=0.894 | train R2=0.5746 | val R2=0.8259
 Epoch 005 | train MAE=9.25 | val MAE=4.34 | val F1=0.874 | train R2=0.6760 | val R2=0.7827
+Epoch 006 | train MAE=6.42 | val MAE=7.20 | val F1=0.810 | train R2=0.7412 | val R2=0.6821
+Epoch 007 | train MAE=7.64 | val MAE=5.89 | val F1=0.894 | train R2=0.7563 | val R2=0.8266
+Epoch 008 | train MAE=8.83 | val MAE=8.88 | val F1=0.857 | train R2=0.6596 | val R2=0.7609
+Epoch 009 | train MAE=6.90 | val MAE=9.70 | val F1=0.639 | train R2=0.7553 | val R2=0.4359
+Epoch 010 | train MAE=5.77 | val MAE=4.90 | val F1=0.894 | train R2=0.7601 | val R2=0.8355
+Epoch 011 | train MAE=6.53 | val MAE=4.40 | val F1=0.854 | train R2=0.7793 | val R2=0.7575
+Epoch 012 | train MAE=5.72 | val MAE=11.57 | val F1=0.864 | train R2=0.7865 | val R2=0.7917
+Epoch 013 | train MAE=5.71 | val MAE=4.20 | val F1=0.867 | train R2=0.8243 | val R2=0.7695
+Epoch 014 | train MAE=5.16 | val MAE=3.58 | val F1=0.884 | train R2=0.8234 | val R2=0.8282
+Epoch 015 | train MAE=4.67 | val MAE=6.99 | val F1=0.881 | train R2=0.8003 | val R2=0.8115
+Epoch 016 | train MAE=5.09 | val MAE=3.61 | val F1=0.884 | train R2=0.8181 | val R2=0.8055
+Epoch 017 | train MAE=4.29 | val MAE=5.31 | val F1=0.874 | train R2=0.8220 | val R2=0.7976
+Epoch 018 | train MAE=3.39 | val MAE=4.28 | val F1=0.864 | train R2=0.8779 | val R2=0.7795
+Epoch 019 | train MAE=5.35 | val MAE=5.69 | val F1=0.881 | train R2=0.7662 | val R2=0.8112
+Epoch 020 | train MAE=5.37 | val MAE=4.68 | val F1=0.892 | train R2=0.7824 | val R2=0.8266
+Epoch 021 | train MAE=3.91 | val MAE=3.83 | val F1=0.884 | train R2=0.8111 | val R2=0.8060
+Epoch 022 | train MAE=3.38 | val MAE=3.67 | val F1=0.881 | train R2=0.8614 | val R2=0.8107
+Epoch 023 | train MAE=3.48 | val MAE=3.94 | val F1=0.894 | train R2=0.8447 | val R2=0.8275
+Epoch 024 | train MAE=4.70 | val MAE=3.65 | val F1=0.894 | train R2=0.8069 | val R2=0.8326
+Weight-averaged checkpoint over epochs [14, 16, 22, 24] (top-4 by selection key)
+{'best_epoch': 14, 'device': 'cpu', 'runtime_sec': 6122.430935144424, 'test': {'mae': 6.677303922128678, 'rmse': 104.4391956319907, 'r2': 0.7698741450534451, 'sae': 0.10006760000204261, 'energy_error': -0.10006760000204261, 'precision': 0.9380530973451328, 'recall': 0.7969924812030075, 'f1': 0.8617886178861789}, 'config': {'seed': 42, 'device': 'cpu', 'data': {'path': '', 'appliance': 'kettle', 'window_size': 128, 'train_ratio': 0.7, 'val_ratio': 0.15, 'test_ratio': 0.15, 'max_samples_train': 30000, 'max_samples_val': 8000, 'max_samples_test': 30000, 'event_boost': {'threshold_w': 500.0, 'max_extra': 15000, 'stochastic_epochs': True, 'event_frac': 0.45}}, 'model': {'input_dim': 1, 'd_model': 128, 'nhead': 8, 'num_layers': 4, 'dim_feedforward': 256, 'dropout': 0.0}, 'training': {'batch_size': 64, 'epochs': 30, 'lr': 0.0004, 'weight_decay': 0.0001, 'patience': 10, 'grad_clip': 1.0, 'loss': 'mse', 'lr_schedule': 'cosine', 'weight_avg': 4}, 'metrics': {'on_threshold_watts': 500.0}}, 'n_train': 30000, 'n_val': 8000, 'n_test': 30000}
