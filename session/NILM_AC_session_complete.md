@@ -50,3 +50,8 @@
 - 关键决策：GPU 存在时**覆盖** config 的 `device: cpu`（用户指令「优先使用 GPU」优先于配置）；无 GPU 时不做任何静默降级——显式 cuda 照旧交给下游报错，保持原语义。
 - 未决问题：真实 GPU 机器上的显存适配（d128/bs64 seq128 显存需求小，预计 <1GB；未见真实 CUDA 环境实测，本沙箱无卡）。
 - 相关文件：`src/device.py`、`tests/test_device.py`、`README.md`、`STATUS.md` 决策记录。
+
+## 2026-09-07 续7（沙箱重建第7次·恢复+CSV 依据列）
+- 症状同前六次：`.venv`/`.git` 重置、工作区文件幸存、远端 tip `059a008` 完好。恢复=`git fetch origin <branch>`→`git reset FETCH_HEAD`→重建 venv。注：pytorch 官方 whl/cpu 源 TLS 被断开，改走 pypi 默认源装 torch 2.14.0+cu130 成功（本沙箱无 GPU，resolve_device 自动回落 CPU，行为符合设计）。
+- 需求追加：CSV 增加 `rationale` 列——每轮调参参数选择的依据（针对父轮指标的诊断与可证伪假设），26 行全覆盖无缺失；生成器 LANES 注册表升级为 6 元组，依据与台账同源，后续重跑不丢。
+- 交付：`reports/tuning_rounds.csv`（26×56，指标数值与 55 列版逐项一致），commit `见下`，已推送。

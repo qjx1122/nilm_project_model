@@ -32,6 +32,7 @@
 5. 评测口径升级：连续覆盖 + 按事件对齐（对齐 NILMbench 可比性）；`run_real.ps1` 可补默认路径 `data/ukdale_prepared.npz`（沙箱无法测 PowerShell）
 
 ## 决策记录 / 踩坑
+- [2026-09-07 台账] tuning_rounds.csv 增加 rationale 列（每轮调参依据：父轮指标诊断→本轮假设），26 行无缺失；沙箱第 7 次重建已按标准流程恢复（远端 059a008 对齐+venv 重建）。
 - [2026-09-05 台账] 全轮次调优指标导出 `reports/tuning_rounds.csv`（26 行×55 列，时序+父节点差值）：生成器 `scripts/build_tuning_csv.py` 幂等可重跑；集成行走 `reports/.ens_cache.json` 缓存；SAE 按仓库口径=|energy_error|（metrics.py:14），跨协议行（8k/4k/4k 与 10k/6k/6k 小口径）差值列留空防误导。
 
 - [2026-09-05 工具] **GPU 自动优先**：新增 `src/device.py::resolve_device`——检测到可用 CUDA 即优先 GPU（覆盖 config `device: cpu`，显式 `cuda:i` 索引合法则保留、越界回落首卡）；无 GPU 完全按原有逻辑（auto→cpu、显式名照返照旧）。接入 train/eval_ckpt/threshold_scan 三入口（trainer/experiment 经由 `select_device` 继承）；每次选择打印 `[device] ...` 入日志。tests/test_device.py 4 例 monkeypatch 用例覆盖双分支。CPU 沙箱合成冒烟行为不变（5 passed）。
