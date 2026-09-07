@@ -77,3 +77,8 @@
 ## 2026-09-07 续11（三口径公平性代码审计）
 - 用户问题：对比调优时是否必须固定 max_samples_train/val/test。代码结论：test=考卷（linspace(N) 换 N 即换题，必须同值或 eval_ckpt 复评）；val=评审答卷（影响 best-epoch/top-k 留权重，单变量对比必须冻结）；train=学习材料（合法独立因子，但改它=数据规模轴，且隐性联动 event_boost 替换量 n×frac 与每 epoch 步数 n/batch；归一化统计与抽样无关）。
 - 落地：`build_tuning_csv.py` Δ 守卫由"仅 n_test 相等"升级为三口径（未记录侧记 ? 不阻塞）；CSV 新增 `protocol_diff` 列（57 列），F2 行 Δ 转标注；规则全文写入 TUNING_GUIDE §4 铁律 1。历史 26 轮复审：单因子轮全部合规（三值同），Phase 间对比由 eval_ckpt 统一，无被掩盖的结论反转（F2 属声明式规模轴，数字仍在 note/rationale）。
+
+## 2026-09-07 续12（表格体检与两处修复）
+- 按用户复核请求对 CSV 做全面体检（结构/8 指标×26 轮对账 result.json/Δ 数学/父行重复一致/守卫行为），发现两处真问题并修：①昨日升级的 Δ 守卫误以"实际 n_*"判公平→F5/F6 静态 boost 行（44935 实际长度）被误伤，改回 config 名义值判定后 Δ 恢复（+11.9%/+8.5%）；②anchor 行 p_max_samples_test 显示 6000（baseline 名义）与复评实际 30000 不符，已修。
+- 规则最终版：test/val 名义采样参数必须同值（跨口径走 eval_ckpt），train 可动但即数据规模轴；实际集长可被处置（boost）合法改变、不参与公平性判定。
+- 指南 §4 铁律 1、REPORT_TEST 验证专题、STATUS 各落笔；commit 见下。

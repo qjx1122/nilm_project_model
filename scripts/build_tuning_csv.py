@@ -223,9 +223,11 @@ def main():
         if run_id == "anchor_dense_reeval":
             j = json.loads((REP / "ukdale_baseline_cpu_short" / "dense_test_eval.json").read_text(encoding="utf-8"))
             base = by_id["ukdale_baseline_cpu_short"]
+            ap = dict(base["params"])
+            ap["max_samples_test"] = j.get("n_test") or 30000  # 显示实际复评考卷而非 baseline 名义值
             rec = {"run_id": run_id, "stage": stage, "change": change, "parent": parent, "note": note,
                    "rationale": basis,
-                   "test": j, "params": dict(base["params"]), "n_test": j.get("n_test"),
+                   "test": j, "params": ap, "n_test": j.get("n_test"),
                    "n_train": base.get("n_train"), "n_val": base.get("n_val"),
                    "best_epoch": base.get("best_epoch"), "runtime_sec": "",
                    **{k: v for k, v in base.items() if k.startswith("val_")}, "status": "复评(同ckpt加密口径)"}
@@ -285,9 +287,13 @@ def main():
         # 单边未记录(纯评估/复评行)记 "?" 不阻塞，n_test 仍必须相等。
         diffs, blocker = [], False
         for k in ("n_train", "n_val", "n_test"):
-            cv, pv2 = rec.get(k), par.get(k)
             if not par:
                 break
+            # 公平性以 config 名义采样参数为准；实际长度(可被 event_boost 等处置撑大)仅作展示
+            cv, pv2 = (rec.get("params") or {}).get({"n_train": "max_samples_train",
+                     "n_val": "max_samples_val", "n_test": "max_samples_test"}[k]), \
+                     (par.get("params") or {}).get({"n_train": "max_samples_train",
+                     "n_val": "max_samples_val", "n_test": "max_samples_test"}[k])
             if cv is None or pv2 is None:
                 if (cv is None) != (pv2 is None):
                     diffs.append(f"{k}:?")
