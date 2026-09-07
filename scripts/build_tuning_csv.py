@@ -188,6 +188,10 @@ def load_lane(run_id):
     out["test"] = test
     # params
     m = (cfg.get("model") or {}); t = (cfg.get("training") or {}); da = (cfg.get("data") or {})
+    for key, ck in (("n_train", "max_samples_train"), ("n_val", "max_samples_val"),
+                    ("n_test", "max_samples_test")):
+        if out.get(key) is None:
+            out[key] = da.get(ck)
     eb = da.get("event_boost")
     out["params"] = {
         "seed": cfg.get("seed"), "window_size": da.get("window_size"),
@@ -246,7 +250,7 @@ def main():
             ["val_mae_W", "val_r2", "val_precision", "val_recall", "val_f1",
              "test_mae_W", "test_rmse_W", "test_r2", "test_sae", "test_energy_error",
              "test_precision", "test_recall", "test_f1",
-             "d_mae_W", "d_mae_pct", "d_r2", "d_sae", "d_precision", "d_recall", "d_f1", "note"])
+             "d_mae_W", "d_mae_pct", "d_r2", "d_sae", "d_precision", "d_recall", "d_f1", "protocol_diff", "note"])
 
     def prot(rec):
         return rec.get("n_test")
@@ -276,7 +280,22 @@ def main():
         row["p_event_boost"] = p.get("event_boost", "")
         par = by_id.get(rec.get("parent") or "") or {}
         pt = par.get("test", {}) or {}
-        if pt and t and prot(rec) == prot(par):
+        # 公平性审计(2026-09-07 结论)：train/val/test 三口径分别决定"学习材料/选择标尺/
+        # 考卷"，任一被"已知地"改变即构成双变量对比 → Δ 置空并在 protocol_diff 列注明；
+        # 单边未记录(纯评估/复评行)记 "?" 不阻塞，n_test 仍必须相等。
+        diffs, blocker = [], False
+        for k in ("n_train", "n_val", "n_test"):
+            cv, pv2 = rec.get(k), par.get(k)
+            if not par:
+                break
+            if cv is None or pv2 is None:
+                if (cv is None) != (pv2 is None):
+                    diffs.append(f"{k}:?")
+            elif cv != pv2:
+                diffs.append(f"{k}:{pv2}->{cv}")
+                blocker = True
+        row["protocol_diff"] = ("same" if not diffs else ";".join(diffs)) if par else ""
+        if pt and t and prot(rec) == prot(par) and not blocker:
             g = lambda k: (t.get(k), pt.get(k))
             dm, dr2, ds, dp, dr_, df = g("mae"), g("r2"), g("sae"), g("precision"), g("recall"), g("f1")
             row["d_mae_W"] = fmt(dm[0] - dm[1], 2) if None not in dm else ""

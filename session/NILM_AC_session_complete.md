@@ -73,3 +73,7 @@
 - 需求：tuning_rounds.csv 每轮输出前先行输出所对比轮（父轮）整行，再当前轮，块尾空行。实现于 `scripts/build_tuning_csv.py` 写出段（数据不变、纯排版）；26 块校验（1 个 baseline 单行块）+ 数字与 result.json 回归 OK；父行在多个子块中重复为预期设计。
 - 期间沙箱第 10 次重建（.venv+git 再灭失，本轮编辑落在工作区幸存）→ 标准恢复（fetch/reset + numpy/pyyaml 重装即可重跑生成器）。
 - commit+push 见下；无遗留。
+
+## 2026-09-07 续11（三口径公平性代码审计）
+- 用户问题：对比调优时是否必须固定 max_samples_train/val/test。代码结论：test=考卷（linspace(N) 换 N 即换题，必须同值或 eval_ckpt 复评）；val=评审答卷（影响 best-epoch/top-k 留权重，单变量对比必须冻结）；train=学习材料（合法独立因子，但改它=数据规模轴，且隐性联动 event_boost 替换量 n×frac 与每 epoch 步数 n/batch；归一化统计与抽样无关）。
+- 落地：`build_tuning_csv.py` Δ 守卫由"仅 n_test 相等"升级为三口径（未记录侧记 ? 不阻塞）；CSV 新增 `protocol_diff` 列（57 列），F2 行 Δ 转标注；规则全文写入 TUNING_GUIDE §4 铁律 1。历史 26 轮复审：单因子轮全部合规（三值同），Phase 间对比由 eval_ckpt 统一，无被掩盖的结论反转（F2 属声明式规模轴，数字仍在 note/rationale）。
