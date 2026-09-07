@@ -82,3 +82,7 @@
 - 按用户复核请求对 CSV 做全面体检（结构/8 指标×26 轮对账 result.json/Δ 数学/父行重复一致/守卫行为），发现两处真问题并修：①昨日升级的 Δ 守卫误以"实际 n_*"判公平→F5/F6 静态 boost 行（44935 实际长度）被误伤，改回 config 名义值判定后 Δ 恢复（+11.9%/+8.5%）；②anchor 行 p_max_samples_test 显示 6000（baseline 名义）与复评实际 30000 不符，已修。
 - 规则最终版：test/val 名义采样参数必须同值（跨口径走 eval_ckpt），train 可动但即数据规模轴；实际集长可被处置（boost）合法改变、不参与公平性判定。
 - 指南 §4 铁律 1、REPORT_TEST 验证专题、STATUS 各落笔；commit 见下。
+
+## 2026-09-07 续13（CSV 版式回退单行制 + report_dir 列）
+- 需求：去掉父轮对照行/空行（对比块作废，恢复一行一轮），并加 report_dir 列指向 reports/ 下产物文件夹。实现于 build_tuning_csv 写出段+cols+load 循环；anchor 行目录=ukdale_baseline_cpu_short（dense_test_eval.json 所在），win256/集成行按实际留空。
+- 校验：文件 27 行（表头+26）、58 列、report_dir 全部真实存在（除两处设计性留空）、Δ 与指标数字零回归。commit 见下。

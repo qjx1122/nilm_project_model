@@ -228,12 +228,14 @@ def main():
             rec = {"run_id": run_id, "stage": stage, "change": change, "parent": parent, "note": note,
                    "rationale": basis,
                    "test": j, "params": ap, "n_test": j.get("n_test"),
+                   "report_dir": "ukdale_baseline_cpu_short",
                    "n_train": base.get("n_train"), "n_val": base.get("n_val"),
                    "best_epoch": base.get("best_epoch"), "runtime_sec": "",
                    **{k: v for k, v in base.items() if k.startswith("val_")}, "status": "复评(同ckpt加密口径)"}
         else:
             rec = load_lane(run_id)
-            rec.update({"stage": stage, "change": change, "parent": parent, "note": note, "rationale": basis})
+            rec.update({"stage": stage, "change": change, "parent": parent, "note": note, "rationale": basis,
+                        "report_dir": run_id if (REP / run_id).is_dir() else ""})
         by_id[run_id] = rec
         recs.append(rec)
 
@@ -241,13 +243,14 @@ def main():
     if not a.skip_ensemble:
         try:
             er = build_ensemble_row()
+            er["report_dir"] = ""  # 集成轮无独立产物目录（模型文件分散在四个成员目录）
             er["rationale"] = ("F13 已证 seed 噪声 ±0.7W 且各臂 FN 漏检位置互不相同→功率中位数集成可同时"
                                "平均掉 MAE 噪声并互补召回缺口；median 比 mean 抗单成员过预测；t*=115 仅用 val8k 选定防 test 偷看")
             recs.append(er)
         except Exception as e:
             print("ensemble row skipped:", e)
 
-    cols = (["seq", "run_id", "stage", "change", "rationale", "parent", "status", "n_train", "n_val", "n_test",
+    cols = (["seq", "run_id", "report_dir", "stage", "change", "rationale", "parent", "status", "n_train", "n_val", "n_test",
              "best_epoch", "runtime_sec"] + [f"p_{k}" for k in PARAM_KEYS] + ["p_event_boost"] +
             ["val_mae_W", "val_r2", "val_precision", "val_recall", "val_f1",
              "test_mae_W", "test_rmse_W", "test_r2", "test_sae", "test_energy_error",
@@ -262,7 +265,9 @@ def main():
         t = rec.get("test", {}) or {}
         p = rec.get("params", {}) or {}
         row = {
-            "seq": i, "run_id": rec["run_id"], "stage": rec.get("stage", ""), "change": rec.get("change", ""),
+            "seq": i, "run_id": rec["run_id"],
+            "report_dir": rec.get("report_dir", ""),
+            "stage": rec.get("stage", ""), "change": rec.get("change", ""),
             "rationale": rec.get("rationale", ""),
             "parent": rec.get("parent", ""), "status": rec.get("status", ""),
             "n_train": rec.get("n_train", ""), "n_val": rec.get("n_val", ""), "n_test": rec.get("n_test", ""),
@@ -314,20 +319,11 @@ def main():
         rows.append(row)
 
     out = REP / "tuning_rounds.csv"
-    by_seq_row = {r["run_id"]: r for r in rows}
     with open(out, "w", newline="", encoding="utf-8-sig") as f:
         w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
         w.writeheader()
-        # 每轮一个对比块：父轮(所对比那一轮)整行 → 当前轮整行 → 空行分隔。
-        # 父行会在多个块中重复出现（各块自成对照，无需回翻 seq）；空行会被 csv/pandas 等
-        # 解析器自动跳过，Excel 中显示为块间隔。
-        for row in rows:
-            par = by_seq_row.get(row.get("parent") or "")
-            if par is not None and par is not row:
-                w.writerow(par)
-            w.writerow(row)
-            f.write("\n")
-    print(f"written {out} ({len(rows)} rows + {sum(1 for r in rows if (r.get('parent') or '') in by_seq_row and by_seq_row[r['parent']] is not r)} parent context rows)")
+        w.writerows(rows)
+    print(f"written {out} ({len(rows)} rows)")
 
 
 def build_ensemble_row():

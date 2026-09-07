@@ -32,6 +32,7 @@
 5. 评测口径升级：连续覆盖 + 按事件对齐（对齐 NILMbench 可比性）；`run_real.ps1` 可补默认路径 `data/ukdale_prepared.npz`（沙箱无法测 PowerShell）
 
 ## 决策记录 / 踩坑
+- [2026-09-07 台账] tuning_rounds.csv 按用户要求回归一行一轮（撤销父轮对照行+空行块式），新增 report_dir 列（第 3 列，reports/ 下产物文件夹名；win256 与集成轮无目录记空）；26×58 列，Δ/指标零改动，report_dir 全部经目录存在性校验。
 - [2026-09-07 表格体检] tuning_rounds.csv 全面校验：结构/对账/Δ 数学/父行一致性均过；修两问题——Δ 守卫改按 config 名义采样参数判定（F5/F6 静态 boost 误伤恢复）、anchor 行 test 口径显示改为实际复评值 30000。三口径锁定规则最终版：test/val 名义值必须同、train 属独立规模轴；审计全文见 REPORT_TEST。
 - [2026-09-07 审计] 对比公平性规则：test=考卷/val=评审答卷/train=学习材料，三个采样键在单变量对比中前两者必须同值、后者可动但属独立轴（隐性耦合：event_boost 替换量与每-epoch步数随 n_train 缩放；归一化不受影响）；已写入 TUNING_GUIDE §4 并升级 build_tuning_csv Δ 守卫为三口径+新增 protocol_diff 列（F2 行 Δ 转标注）。历史 26 轮复核：单因子轮合规，无结论反转。
 - [2026-09-07 台账] tuning_rounds.csv 版式改为对比块：每轮=[对照轮(父)整行, 当前轮整行, 空行]，块数 26、父行跨块重复属设计（各块自含对照，Excel 免回翻）；数据列/数值零改动，生成器写出段同步（csv.DictReader/pandas 自动跳过空行）。
