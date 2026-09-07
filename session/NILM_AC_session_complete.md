@@ -62,3 +62,9 @@
 - B1（sup60/m2of3 时序滤波）**判死**：seq2point 点标签下真事件即单点尖峰，滤波同杀 TP；后处理须配事件级聚合口径（教训入册）。
 - 统计诚实性：N_ON=266（修正前案 665 的反推错误），1σ=1.84pp，bootstrap min(P,R) CI=[.868,.940] → 按预注册记"达标待复验"，未动 REPORT §4。转正=B3（seed44/45 补员 median6，≈4h CPU）或 C1（剔噪口径）。
 - 台账：REPORT_TEST 新增 A1 专题、STATUS 决策行、commit ff10209 已推。阻塞：无；待用户裁决 B3 是否开跑。
+
+## 2026-09-07 续9（教学文档重构：TUNING_GUIDE.md）
+- 需求：以"无算法理论基础的软件工程师"视角重梳调参过程并整理落盘文档。产出 `TUNING_GUIDE.md`（13 节：任务/指标/配置字典/方法论五铁律/四阶段战史/SOP/命令/坑单/术语表/文档地图）；BOOTSTRAP 文档表登记（整篇重写式维护，不追加流水，守住防文件爆炸纪律）；README 加阅读顺序入口+文件树补登（threshold_scan/build_tuning_csv/a1_val30k/tuning_rounds.csv）。
+- 数字对账：全部对照 tuning_rounds.csv 与 a1_val30k.json 复核；修正旧稿三处不精确（"99.37% 为 0W"→"<500W 占比"；drop0 收益口径按 8k 泳道内最佳+10k A/B −7.7% 重述；攻坚尸检 FN/FP 用实测 54/14，弃 665 反推旧数）。
+- 期间沙箱第 9 次重建（venv+.git 灭失）→ 标准恢复；`.a1_preds.npz`(764K) 入 .gitignore 排除（缓存可再生）。
+- 状态：文档任务闭环；B3（seed44/45 补员转正）仍待用户拍板。

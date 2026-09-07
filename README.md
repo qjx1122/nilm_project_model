@@ -4,6 +4,8 @@
 
 > 重要：本项目不会伪造实验结果。仓库已内置处理好的真实数据 `data/ukdale_prepared.npz`（UK-DALE House1 kettle，6s，aggregate+target），真实指标直接跑 §6 即可复现；已产出第一组真实指标（缩短版，见 `reports/ukdale_baseline_cpu_short/` 与 `REPORT_TEST.md`），全量 baseline 仍待运行。合成 smoke test 仅用于验证代码链路。
 
+> **新手请先读 [`TUNING_GUIDE.md`](TUNING_GUIDE.md)**：面向无算法背景的工程师，用本仓库 26 轮真实调参史讲解「每个指标是什么、为什么这么调、怎么自己复现」。全项目文档阅读顺序：`TUNING_GUIDE.md`（怎么想）→ 本文件（怎么跑）→ `REPORT.md`（稳定结论）→ `reports/tuning_rounds.csv`（逐轮数据+依据）→ `REPORT_TEST.md`（专题全过程）→ `STATUS.md`（当前状态）。
+
 ## 1. 实验目标
 
 输入：
@@ -97,8 +99,10 @@ transformer_nilm_project/
 ├── logs/
 ├── reports/
 │   ├── smoke/                   # 合成数据冒烟产物（非真实结果）
-│   └── ukdale_baseline_cpu_short/  # 第一组真实指标（缩短版）
+│   ├── ukdale_baseline_cpu_short/  # 第一组真实指标（缩短版）
+│   └── tuning_rounds.csv           # 26 轮调参全账本（Excel 可直接打开）
 ├── STATUS.md                    # 续接文件（见 BOOTSTRAP.md）
+├── TUNING_GUIDE.md              # 调参教学文档（新手先读）
 ├── session/                     # 会话纪要（追加式）
 ├── REPORT_TEST.md               # 专题报告（追加式）
 ├── BOOTSTRAP.md                 # 会话与任务协议
@@ -113,6 +117,9 @@ transformer_nilm_project/
 │   ├── train.py
 │   ├── evaluate.py
 │   ├── eval_ckpt.py     # checkpoint 按原配置换口径复评（可加密 test 集做跨 run 公平对比）
+│   ├── threshold_scan.py  # 决策阈值扫描（P/R 跷跷板曲线、运营点选择）
+│   ├── build_tuning_csv.py # 生成 reports/tuning_rounds.csv（全调参史：参数/指标/依据/差值）
+│   ├── a1_val30k.py       # A1 实验：val30k+max-min 选点与滤波变体（幂等带缓存）
 │   ├── tune.py
 │   └── run_smoke.py
 ├── tests/
