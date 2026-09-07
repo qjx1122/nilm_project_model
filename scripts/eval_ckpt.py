@@ -22,6 +22,7 @@ from src.data import load_simple_npz, build_splits
 from src.model import NILMTransformer
 from src.metrics import regression_metrics
 from src.trainer import run_epoch
+from src.device import resolve_device
 
 p = argparse.ArgumentParser()
 p.add_argument("--config", required=True, help="run 的 config.yaml（决定切分与归一化口径）")
@@ -44,11 +45,12 @@ train_ds, _val_ds, test_ds = build_splits(
     dcfg.get("max_samples_test"),
 )
 
-model = NILMTransformer(**cfg["model"])
-model.load_state_dict(torch.load(args.ckpt, map_location="cpu", weights_only=True))
+dev = resolve_device(cfg.get("device", "auto"))
+model = NILMTransformer(**cfg["model"]).to(dev)
+model.load_state_dict(torch.load(args.ckpt, map_location=dev, weights_only=True))
 
 loader = DataLoader(test_ds, batch_size=int(cfg["training"]["batch_size"]), shuffle=False)
-_, yt, yp = run_epoch(model, loader, torch.device("cpu"), None,
+_, yt, yp = run_epoch(model, loader, dev, None,
                      cfg["training"].get("loss", "mse"), 0.0)
 yt = yt * train_ds.y_std + train_ds.y_mean
 yp = yp * train_ds.y_std + train_ds.y_mean

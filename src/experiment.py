@@ -7,6 +7,7 @@ from .model import NILMTransformer
 from .data import build_splits
 from .metrics import regression_metrics
 from .trainer import fit, run_epoch
+from .device import resolve_device
 
 
 def seed_everything(seed=42):
@@ -18,9 +19,8 @@ def seed_everything(seed=42):
 
 
 def select_device(name="auto"):
-    if name == "auto":
-        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    return torch.device(name)
+    """GPU auto-priority (see src/device.py); no-GPU machines keep original behavior."""
+    return resolve_device(name)
 
 
 def train_experiment(aggregate, target, cfg, out_dir):

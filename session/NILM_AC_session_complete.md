@@ -43,3 +43,10 @@
 - 未决问题：seed44 复验；val 加密（30k）用于决策层选点；jitter 全长单变量对照；500W 双 0.9 若为硬验收需与用户重议口径（决策阈值 95-115W 或事件级 P/R），依据已备好。
 - 相关文件/分支：`arena/01a06f16-nilm-project-model`；产物 `reports/tune_f4_* … tune_f13_seed43`；诊断件 `/tmp/*_preds.npz`、`/tmp/val_gate.py`；文档 `REPORT.md` §3.5-3.8/§4、`REPORT_TEST.md` 末节、`STATUS.md`。
 - 事故记录：沙箱全程未重建但 turn 间长 sleep 轮询易被杀（以后台进程+result.json 为准）；d128 泳道期间并行第二进程触发全局 OOM 误杀 F10（教训入 REPORT.md §5）；GitHub 令牌短时效，push 需择机重试。
+
+## [2026-09-05] 会话纪要（GPU 自动优先小改造）
+- 目标：代码自动检查 GPU——有则优先使用，无则按原有逻辑。
+- 完成项：新增 `src/device.py`（`cuda_ready/resolve_device`：有卡→cuda，config 的 cpu/auto 被覆盖；`cuda:i` 合法索引保留、越界回落首卡；无卡→auto=cpu、显式名照旧返回）。接线 `src/experiment.py`（select_device 委托）、`scripts/eval_ckpt.py`、`scripts/threshold_scan.py`（脱离硬编码 cpu，map_location 同步走卡）；决策打印 `[device]` 入 train.log。新增 tests/test_device.py（4 例，monkeypatch 双分支）全绿（合计 5 passed）；合成端到端冒烟确认无 GPU 机器行为与数值路径不变。README §3 补一句设备选择说明。
+- 关键决策：GPU 存在时**覆盖** config 的 `device: cpu`（用户指令「优先使用 GPU」优先于配置）；无 GPU 时不做任何静默降级——显式 cuda 照旧交给下游报错，保持原语义。
+- 未决问题：真实 GPU 机器上的显存适配（d128/bs64 seq128 显存需求小，预计 <1GB；未见真实 CUDA 环境实测，本沙箱无卡）。
+- 相关文件：`src/device.py`、`tests/test_device.py`、`README.md`、`STATUS.md` 决策记录。

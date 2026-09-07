@@ -74,7 +74,7 @@ conda activate transformer_nilm
 pip install -r requirements.txt
 ```
 
-GPU 用户请先按自己的 CUDA 版本安装对应 PyTorch，再安装其余依赖。
+GPU 用户请先按自己的 CUDA 版本安装对应 PyTorch，再安装其余依赖。设备为自动检测：训练/评估入口（`scripts/train.py`、`eval_ckpt.py`、`threshold_scan.py`）会优先使用检测到的 GPU（config 里 `device: cpu` 也会被覆盖为 GPU）；无可用 GPU 时回退原有逻辑（`auto`→cpu，显式设备名照旧）。日志会打印一行 `[device] ...` 说明本次选择。
 
 ### 3.1 Linux / CPU（无 conda 的沙箱环境）
 

@@ -20,6 +20,7 @@ from torch.utils.data import DataLoader
 from src.data import load_simple_npz, build_splits
 from src.model import NILMTransformer
 from src.trainer import run_epoch
+from src.device import resolve_device
 
 p = argparse.ArgumentParser()
 p.add_argument("--config", required=True)
@@ -42,10 +43,11 @@ train_ds, _val, test_ds = build_splits(
     x, y, int(dcfg["window_size"]), dcfg["train_ratio"], dcfg["val_ratio"],
     dcfg.get("max_samples_train"), dcfg.get("max_samples_val"), dcfg.get("max_samples_test"))
 
-model = NILMTransformer(**cfg["model"])
-model.load_state_dict(torch.load(args.ckpt, map_location="cpu", weights_only=True))
+dev = resolve_device(cfg.get("device", "auto"))
+model = NILMTransformer(**cfg["model"]).to(dev)
+model.load_state_dict(torch.load(args.ckpt, map_location=dev, weights_only=True))
 _, yt, yp = run_epoch(model, DataLoader(test_ds, batch_size=cfg["training"]["batch_size"], shuffle=False),
-                      torch.device("cpu"), None, cfg["training"].get("loss", "mse"), 0.0)
+                      dev, None, cfg["training"].get("loss", "mse"), 0.0)
 yt = yt * train_ds.y_std + train_ds.y_mean
 yp = yp * train_ds.y_std + train_ds.y_mean
 if args.save_preds:

@@ -32,6 +32,61 @@
 5. 评测口径升级：连续覆盖 + 按事件对齐（对齐 NILMbench 可比性）；`run_real.ps1` 可补默认路径 `data/ukdale_prepared.npz`（沙箱无法测 PowerShell）
 
 ## 决策记录 / 踩坑
+- [2026-09-05 工具] **GPU 自动优先**：新增 `src/device.py::resolve_device`——检测到可用 CUDA 即优先 GPU（覆盖 config `device: cpu`，显式 `cuda:i` 索引合法则保留、越界回落首卡）；无 GPU 完全按原有逻辑（auto→cpu、显式名照返照旧）。接入 train/eval_ckpt/threshold_scan 三入口（trainer/experiment 经由 `select_device` 继承）；每次选择打印 `[device] ...` 入日志。tests/test_device.py 4 例 monkeypatch 用例覆盖双分支。CPU 沙箱合成冒烟行为不变（5 passed）。
+
+- [2026-09-05 攻坚] **500W 点级双 0.9 被标签噪声锁定**：FP 76% 为子电表丢数误标（剔噪 .976）、FN ~29% 聚合无痕迹、FN 跨模型/跨 seed 重合 98%；单调校准=阈值扫描已是最优，λ 加权/静态 boost/post-hoc TTA/跨族集成全数证伪——**验收口径需与用户重议**（运营点 95-115W：median4 集成 .906/.906，val 选点 .907/.880）。
+- [2026-09-05 攻坚] **泳道资源纪律**：d128 训练（RSS ~1.5GB）期间禁止并行任何 >0.5GB 进程（F10 被 TTA 扫描触发全局 OOM 误杀）；timeout=pace 上限×ep×1.5（F6/F8/F10 三次被 timeout 截，此后所有 phase 脚本带 result.json 缺失自动兜底 eval_ckpt）。
+- [2026-09-05 攻坚] **sed 改 YAML 会静默失配**（目标行不存在时 s 命令空转不报错）——F11 事故暴露；配置生成一律 python+yaml.safe_dump 后 diff 校验。副作用反证了管道确定性（同配置同 seed 逐位一致）。
+- [2026-09-05 攻坚] **快照抢救纪律有效**：timeout 逼近时立即 `cp best.pt /tmp` + 完赛后 eval_ckpt 补 result.json，F8 的 ep22 快照成为当时新王且保留至今（reports/tune_f8_big/best.pt）。
+
+- [2026-09-05 调参] **组合不必然=单因子之和**：drop0+lr1e-3 在 Phase2 小口径（8k train, 4k val）最优，但在与 anchor 同尺度 A/B（10k/6k/6k, 10ep）下 R²/EE 反而劣于 drop0-only，故最终配置回到 baseline lr=5e-4。**换更大训练预算时须重跑同尺度 A/B 复核**，小口径排序不能直接外推。
+- [2026-09-05 调参] **cosine 调度是本轮最大增益来源**：F2（固定 lr）val MAE 剧烈震荡（4.9↔11.7），早停在 ep7 选点纯看运气；F3 加 cosine 后后半场稳定收敛于 4.1–5.6，稠密 test MAE 10.59→8.58（−19%）。给 trainer/experiment 加了 opt-in `lr_schedule: cosine`（默认不变，早停分支也 step）。
+- [2026-09-05 调参] **模型选择本身是高影响元超参**：F2 的 best_ep7 checkpoint 在稠密 test 上 EE −28.6%，而 val 曲线 ep12 明显更优——val MAE 单调最小选点在噪声下失效。候选：val F1 / 多目标选点（TODO 2）。
+- [2026-09-05 调参] **L1 loss 否决**：`tune_l1loss` val MAE 10.83、test R²=-0.009、energy_error=-96%——零膨胀稀疏目标下 L1 使模型坍缩到条件中位数(≈0)。调优保持 MSE。（history 在 `reports/tune_l1loss/`）
+- [2026-09-05 调参] **window_size=256 泳道暂缓（本机内存异常）**：seq256+d64 泳道被全局 OOM 杀死；300 步内存二分显示 ~18MB/步 线性增长（seq128 锚点同环境跑 10 epochs 无恙）。torch 2.14.0+cu130 单 import 即 505MB，seq256 单 lane 峰值 2.18GB（MALLOC_ARENA_MAX=2 无效）。aliyun/pku/nju/bfsu 镜像均 TLS 拦截，无法换 CPU 轮子。结论：本环境只跑 seq128；256 窗口留到有 GPU/大内存机器。
+- [2026-09-05 调参] **并行度=1**：两泳道并行时内存余量 <800MB 导致吞吐骤降（epoch 从 ~64s 恶化到 156-390s），改为顺序单泳道（OMP=2 吃满双核）。
+- [2026-09-05 调参] `pkill -f <pattern>` 在 bash 工具里会匹配到自身命令行（含同样字面量）导致自杀，×2 次踩中；清进程一律先 `ps` 定位 PID 再精确 kill。
+- [2026-09-05] 沙箱为 Linux + 2 核 CPU + 3GB 内存：README 的 `conda`/`.ps1` 流程不适用，改用 `python3 -m venv .venv` + `pip`（`.venv` 已加 `.gitignore`，避免 `git add -A` 误收 3.5GB 依赖）。
+- [2026-09-05] `download.pytorch.org` 在本沙箱 TLS 被拦截 → 改 PyPI 默认源装 torch 2.14.0+cu130；**其 import 依赖 nvidia-* 动态库，不可卸载精简**（删了会 ImportError，需按 pin 版本逐个装回）。
+- [2026-09-05] python 非 tty 时 stdout 块缓冲，`tee` 看不到实时 epoch 日志；用 `best.pt` 的 mtime 当进度心跳可观察训练推进。
+- [2026-09-05] 缩短版实验口径说明：`max_samples_train=10000` 是从 70% 时间段（≈7.2M 中心点）linspace 均匀子采样，窗口间隔 ~724 点（≈72 分钟），非连续覆盖；kettle 事件短，子采样导致部分 ON 事件漏采 → energy_error=-21%、recall 0.71 与此吻合。对比 NILMbench 连续窗口口径时需注意此差异。
+- [2026-09-05] 本 session 分支被 Arena 平台固定在 `arena/01a06f16-nilm-project-model`，按 BOOTSTRAP「平台固定 session 分支时可直接在当前分支进行」执行。
+- [2026-09-05] 结果入库策略经用户确认：**结果目录全部提交（含 best.pt，286KB 量级）**；大文件（npz 83MB）此前已入库，不再新增大产物。
+
+## 关键文件路径
+- 数据：`data/ukdale_prepared.npz`（aggregate+target，kettle，6s）
+- **推荐稳定版本**：`reports/tune_final_f3_cosine/`（config/result/history/best.pt）；结论见 `REPORT.md` §4
+- 调参过程产物：`reports/tune_{l1loss,lr1e3,layers4,drop0,d128,c_d0lr1e3,c_d0lr2e3}/`、A/B：`reports/tune_final_ab10k{,_drop0only}/`、全量对照：`reports/tune_final_full/`；anchor 稠密复评：`reports/ukdale_baseline_cpu_short/dense_test_eval.json`
+- 复评工具：`scripts/eval_ckpt.py`（checkpoint 换稠密口径复评，跨 run 公平对比）
+- 本次实验产物：`reports/ukdale_baseline_cpu_short/`（config.yaml / train.log / history.json / result.json / best.pt，已入库）
+- 全量配置（下一步用）：`configs/baseline.yaml`；调参搜索：`configs/tuning.yaml`
+- 训练入口：`scripts/train.py`；查看结果：`scripts/evaluate.py --run-dir reports/ukdale_baseline_cpu_short`
+- 模块：`src/experiment.py`（train_experiment）、`src/trainer.py`（fit+早停，按 val MAE 选 best）、`src/data.py`（linspace 子采样在 build_splits）、`src/metrics.py`
+- 台账：`session/NILM_AC_session_complete.md`（纪要）、`REPORT_TEST.md`（专题）、`README.md`（环境与命令，本 session 已更新）
+- [2026-09-05 调参] **组合不必然=单因子之和**：drop0+lr1e-3 在 Phase2 小口径（8k train, 4k val）最优，但在与 anchor 同尺度 A/B（10k/6k/6k, 10ep）下 R²/EE 反而劣于 drop0-only，故最终配置回到 baseline lr=5e-4。**换更大训练预算时须重跑同尺度 A/B 复核**，小口径排序不能直接外推。
+- [2026-09-05 调参] **cosine 调度是本轮最大增益来源**：F2（固定 lr）val MAE 剧烈震荡（4.9↔11.7），早停在 ep7 选点纯看运气；F3 加 cosine 后后半场稳定收敛于 4.1–5.6，稠密 test MAE 10.59→8.58（−19%）。给 trainer/experiment 加了 opt-in `lr_schedule: cosine`（默认不变，早停分支也 step）。
+- [2026-09-05 调参] **模型选择本身是高影响元超参**：F2 的 best_ep7 checkpoint 在稠密 test 上 EE −28.6%，而 val 曲线 ep12 明显更优——val MAE 单调最小选点在噪声下失效。候选：val F1 / 多目标选点（TODO 2）。
+- [2026-09-05 调参] **L1 loss 否决**：`tune_l1loss` val MAE 10.83、test R²=-0.009、energy_error=-96%——零膨胀稀疏目标下 L1 使模型坍缩到条件中位数(≈0)。调优保持 MSE。（history 在 `reports/tune_l1loss/`）
+- [2026-09-05 调参] **window_size=256 泳道暂缓（本机内存异常）**：seq256+d64 泳道被全局 OOM 杀死；300 步内存二分显示 ~18MB/步 线性增长（seq128 锚点同环境跑 10 epochs 无恙）。torch 2.14.0+cu130 单 import 即 505MB，seq256 单 lane 峰值 2.18GB（MALLOC_ARENA_MAX=2 无效）。aliyun/pku/nju/bfsu 镜像均 TLS 拦截，无法换 CPU 轮子。结论：本环境只跑 seq128；256 窗口留到有 GPU/大内存机器。
+- [2026-09-05 调参] **并行度=1**：两泳道并行时内存余量 <800MB 导致吞吐骤降（epoch 从 ~64s 恶化到 156-390s），改为顺序单泳道（OMP=2 吃满双核）。
+- [2026-09-05 调参] `pkill -f <pattern>` 在 bash 工具里会匹配到自身命令行（含同样字面量）导致自杀，×2 次踩中；清进程一律先 `ps` 定位 PID 再精确 kill。
+- [2026-09-05] 沙箱为 Linux + 2 核 CPU + 3GB 内存：README 的 `conda`/`.ps1` 流程不适用，改用 `python3 -m venv .venv` + `pip`（`.venv` 已加 `.gitignore`，避免 `git add -A` 误收 3.5GB 依赖）。
+- [2026-09-05] `download.pytorch.org` 在本沙箱 TLS 被拦截 → 改 PyPI 默认源装 torch 2.14.0+cu130；**其 import 依赖 nvidia-* 动态库，不可卸载精简**（删了会 ImportError，需按 pin 版本逐个装回）。
+- [2026-09-05] python 非 tty 时 stdout 块缓冲，`tee` 看不到实时 epoch 日志；用 `best.pt` 的 mtime 当进度心跳可观察训练推进。
+- [2026-09-05] 缩短版实验口径说明：`max_samples_train=10000` 是从 70% 时间段（≈7.2M 中心点）linspace 均匀子采样，窗口间隔 ~724 点（≈72 分钟），非连续覆盖；kettle 事件短，子采样导致部分 ON 事件漏采 → energy_error=-21%、recall 0.71 与此吻合。对比 NILMbench 连续窗口口径时需注意此差异。
+- [2026-09-05] 本 session 分支被 Arena 平台固定在 `arena/01a06f16-nilm-project-model`，按 BOOTSTRAP「平台固定 session 分支时可直接在当前分支进行」执行。
+- [2026-09-05] 结果入库策略经用户确认：**结果目录全部提交（含 best.pt，286KB 量级）**；大文件（npz 83MB）此前已入库，不再新增大产物。
+
+## 关键文件路径
+- 数据：`data/ukdale_prepared.npz`（aggregate+target，kettle，6s）
+- **推荐稳定版本**：`reports/tune_final_f3_cosine/`（config/result/history/best.pt）；结论见 `REPORT.md` §4
+- 调参过程产物：`reports/tune_{l1loss,lr1e3,layers4,drop0,d128,c_d0lr1e3,c_d0lr2e3}/`、A/B：`reports/tune_final_ab10k{,_drop0only}/`、全量对照：`reports/tune_final_full/`；anchor 稠密复评：`reports/ukdale_baseline_cpu_short/dense_test_eval.json`
+- 复评工具：`scripts/eval_ckpt.py`（checkpoint 换稠密口径复评，跨 run 公平对比）
+- 本次实验产物：`reports/ukdale_baseline_cpu_short/`（config.yaml / train.log / history.json / result.json / best.pt，已入库）
+- 全量配置（下一步用）：`configs/baseline.yaml`；调参搜索：`configs/tuning.yaml`
+- 训练入口：`scripts/train.py`；查看结果：`scripts/evaluate.py --run-dir reports/ukdale_baseline_cpu_short`
+- 模块：`src/experiment.py`（train_experiment）、`src/trainer.py`（fit+早停，按 val MAE 选 best）、`src/data.py`（linspace 子采样在 build_splits）、`src/metrics.py`
+- 台账：`session/NILM_AC_session_complete.md`（纪要）、`REPORT_TEST.md`（专题）、`README.md`（环境与命令，本 session 已更新）
 - [2026-09-05 攻坚] **500W 点级双 0.9 被标签噪声锁定**：FP 76% 为子电表丢数误标（剔噪 .976）、FN ~29% 聚合无痕迹、FN 跨模型/跨 seed 重合 98%；单调校准=阈值扫描已是最优，λ 加权/静态 boost/post-hoc TTA/跨族集成全数证伪——**验收口径需与用户重议**（运营点 95-115W：median4 集成 .906/.906，val 选点 .907/.880）。
 - [2026-09-05 攻坚] **泳道资源纪律**：d128 训练（RSS ~1.5GB）期间禁止并行任何 >0.5GB 进程（F10 被 TTA 扫描触发全局 OOM 误杀）；timeout=pace 上限×ep×1.5（F6/F8/F10 三次被 timeout 截，此后所有 phase 脚本带 result.json 缺失自动兜底 eval_ckpt）。
 - [2026-09-05 攻坚] **sed 改 YAML 会静默失配**（目标行不存在时 s 命令空转不报错）——F11 事故暴露；配置生成一律 python+yaml.safe_dump 后 diff 校验。副作用反证了管道确定性（同配置同 seed 逐位一致）。
