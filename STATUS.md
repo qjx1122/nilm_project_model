@@ -32,6 +32,7 @@
 5. 评测口径升级：连续覆盖 + 按事件对齐（对齐 NILMbench 可比性）；`run_real.ps1` 可补默认路径 `data/ukdale_prepared.npz`（沙箱无法测 PowerShell）
 
 ## 决策记录 / 踩坑
+- [2026-09-07 四元约束专题] P/R/F1>0.9+SAE<0.2 达成分析入 REPORT_TEST：绑定约束=严格协议 R（需净捕 69/96 可学FN，FN 重合 98%⇒纯调参无解）；A(val选点修复)→B(迟滞滤波/重叠推理/补seed/minprf/能量标定)→C(子电表修复/事件级) 三层计划；运营点口径 A1+B1 达标概率~60% 但需 3 种子复验（665 ON 窗 1σ=1.2pp）。
 - [2026-09-07 台账] tuning_rounds.csv 增加 rationale 列（每轮调参依据：父轮指标诊断→本轮假设），26 行无缺失；沙箱第 7 次重建已按标准流程恢复（远端 059a008 对齐+venv 重建）。
 - [2026-09-05 台账] 全轮次调优指标导出 `reports/tuning_rounds.csv`（26 行×55 列，时序+父节点差值）：生成器 `scripts/build_tuning_csv.py` 幂等可重跑；集成行走 `reports/.ens_cache.json` 缓存；SAE 按仓库口径=|energy_error|（metrics.py:14），跨协议行（8k/4k/4k 与 10k/6k/6k 小口径）差值列留空防误导。
 
