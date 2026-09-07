@@ -55,3 +55,10 @@
 - 症状同前六次：`.venv`/`.git` 重置、工作区文件幸存、远端 tip `059a008` 完好。恢复=`git fetch origin <branch>`→`git reset FETCH_HEAD`→重建 venv。注：pytorch 官方 whl/cpu 源 TLS 被断开，改走 pypi 默认源装 torch 2.14.0+cu130 成功（本沙箱无 GPU，resolve_device 自动回落 CPU，行为符合设计）。
 - 需求追加：CSV 增加 `rationale` 列——每轮调参参数选择的依据（针对父轮指标的诊断与可证伪假设），26 行全覆盖无缺失；生成器 LANES 注册表升级为 6 元组，依据与台账同源，后续重跑不丢。
 - 交付：`reports/tuning_rounds.csv`（26×56，指标数值与 55 列版逐项一致），commit `见下`，已推送。
+
+## 2026-09-07 续8（A1 实验执行：四元约束点估计达标）
+- 沙箱第 8 次重建（.venv+.git 灭失）→ 标准恢复（fetch→reset FETCH_HEAD→venv 重建；新坑：新 venv 依赖装齐要含 sklearn/tqdm，requirements.txt 有全表，照单安装）。
+- 跑通 `scripts/a1_val30k.py`（4 成员×val/test 30k 稠密推理 ≈25min，缓存 `.a1_preds.npz` 幂等）：**median4 raw 在 val30k max-min 选点 t*=95 → test P=R=F1=.9060、SAE=.189**——四元约束运营点口径点估计全过；val8k 时代 0.026 选点缺口被精确收复，"val 分辨率=瓶颈"诊断闭环。
+- B1（sup60/m2of3 时序滤波）**判死**：seq2point 点标签下真事件即单点尖峰，滤波同杀 TP；后处理须配事件级聚合口径（教训入册）。
+- 统计诚实性：N_ON=266（修正前案 665 的反推错误），1σ=1.84pp，bootstrap min(P,R) CI=[.868,.940] → 按预注册记"达标待复验"，未动 REPORT §4。转正=B3（seed44/45 补员 median6，≈4h CPU）或 C1（剔噪口径）。
+- 台账：REPORT_TEST 新增 A1 专题、STATUS 决策行、commit ff10209 已推。阻塞：无；待用户裁决 B3 是否开跑。
