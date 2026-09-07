@@ -289,11 +289,20 @@ def main():
         rows.append(row)
 
     out = REP / "tuning_rounds.csv"
+    by_seq_row = {r["run_id"]: r for r in rows}
     with open(out, "w", newline="", encoding="utf-8-sig") as f:
         w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
         w.writeheader()
-        w.writerows(rows)
-    print(f"written {out} ({len(rows)} rows)")
+        # 每轮一个对比块：父轮(所对比那一轮)整行 → 当前轮整行 → 空行分隔。
+        # 父行会在多个块中重复出现（各块自成对照，无需回翻 seq）；空行会被 csv/pandas 等
+        # 解析器自动跳过，Excel 中显示为块间隔。
+        for row in rows:
+            par = by_seq_row.get(row.get("parent") or "")
+            if par is not None and par is not row:
+                w.writerow(par)
+            w.writerow(row)
+            f.write("\n")
+    print(f"written {out} ({len(rows)} rows + {sum(1 for r in rows if (r.get('parent') or '') in by_seq_row and by_seq_row[r['parent']] is not r)} parent context rows)")
 
 
 def build_ensemble_row():

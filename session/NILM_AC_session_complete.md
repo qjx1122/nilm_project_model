@@ -68,3 +68,8 @@
 - 数字对账：全部对照 tuning_rounds.csv 与 a1_val30k.json 复核；修正旧稿三处不精确（"99.37% 为 0W"→"<500W 占比"；drop0 收益口径按 8k 泳道内最佳+10k A/B −7.7% 重述；攻坚尸检 FN/FP 用实测 54/14，弃 665 反推旧数）。
 - 期间沙箱第 9 次重建（venv+.git 灭失）→ 标准恢复；`.a1_preds.npz`(764K) 入 .gitignore 排除（缓存可再生）。
 - 状态：文档任务闭环；B3（seed44/45 补员转正）仍待用户拍板。
+
+## 2026-09-07 续10（CSV 版式：每轮前置对照轮+空行分块）
+- 需求：tuning_rounds.csv 每轮输出前先行输出所对比轮（父轮）整行，再当前轮，块尾空行。实现于 `scripts/build_tuning_csv.py` 写出段（数据不变、纯排版）；26 块校验（1 个 baseline 单行块）+ 数字与 result.json 回归 OK；父行在多个子块中重复为预期设计。
+- 期间沙箱第 10 次重建（.venv+git 再灭失，本轮编辑落在工作区幸存）→ 标准恢复（fetch/reset + numpy/pyyaml 重装即可重跑生成器）。
+- commit+push 见下；无遗留。
