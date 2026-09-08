@@ -86,3 +86,7 @@
 ## 2026-09-07 续13（CSV 版式回退单行制 + report_dir 列）
 - 需求：去掉父轮对照行/空行（对比块作废，恢复一行一轮），并加 report_dir 列指向 reports/ 下产物文件夹。实现于 build_tuning_csv 写出段+cols+load 循环；anchor 行目录=ukdale_baseline_cpu_short（dense_test_eval.json 所在），win256/集成行按实际留空。
 - 校验：文件 27 行（表头+26）、58 列、report_dir 全部真实存在（除两处设计性留空）、Δ 与指标数字零回归。commit 见下。
+
+## 2026-09-07 续14（生产就绪评估）
+- 用户问：最优模型测集指标对 F1>.9/R>.9/SAE<.2 是否达标、可否生产。判定：median4@t*=95 点估计 3/3（.9060/.9060/.189）但 bootstrap CI 下界 .868 → 记"达标待复验"；F10 单模型运营点差 R 0.9pp、严格口径不达标。生产结论：可灰度、不可正式验收（口径写 SLA + SAE 余量 .011 薄）。给出 val 端能量标定（估算 SAE→.02-.08，P/R 零影响）与转正路径 B3。
+- 沙箱第 11 次重建（本轮 .a1_preds.npz 缓存亦失，gitignore 文件不入快照——分析改由落盘 json 完成，未重推 25min 推理）。评估专题入 REPORT_TEST，STATUS 记一笔。待用户拍板：B3 开跑与否。
